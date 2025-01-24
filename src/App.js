@@ -3,9 +3,9 @@ import React from 'react';
 import { Routes, Route, BrowserRouter } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import UserView from './pages/UserView';
+import UserView from './pages/TenantView';
 import AdminView from './pages/AdminView';
-import GuestView from './pages/GuestView';
+import GuestView from './pages/CustomerView';
 
 function App() {
   return (
