@@ -7,7 +7,7 @@ function Login() {
     const handleSubmit = (event) => {
         event.preventDefault();
         const data = new FormData(event.target);
-        fetch('https://localhost:5000/login', {
+        fetch('http://localhost:8000/api/login', {
             method: 'POST',
             mode: 'no-cors',
             headers: { 

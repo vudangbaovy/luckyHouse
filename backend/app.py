@@ -13,9 +13,9 @@ config.read(os.path.abspath(os.path.join(".ini")))
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite"
-app.config["SECRET_KEY"] = config.get('CONNECTION', 'SECRET_KEY', fallback='default_secret_key')
+app.config["SECRET_KEY"] = config.get('CONNECTION', 'SECRET_KEY')
 Bcrypt = Bcrypt(app)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app)
 db = SQLAlchemy()
 
 login_manager = LoginManager()
@@ -67,7 +67,7 @@ def loader_user(user_id):
     return Users.query.get(user_id)
 
 # Priviledged to only admins
-@app.route("/create", methods=["POST", "GET"])
+@app.route("/api/create/", methods=["POST", "GET"])
 def create():
     username = request.form.get('username')
     password = request.form.get('password')
@@ -78,26 +78,33 @@ def create():
     db.session.commit()
     return 0
 
-@app.route("/login", methods=["POST", "GET"])
+@app.route("/api/login/", methods=["POST", "GET"])
 def login():
-    print('here')
-    user = Users.query.filter_by(username=request.form.get('username')).first()
-    is_valid = Bcrypt.check_password_hash(user.password, request.form.get('password'))
+    if request.method == "GET":
+        return 'Hello World'
+    data = request.get_json()
+    user = Users.query.filter_by(username=data.get('username')).first()
+    is_valid = Bcrypt.check_password_hash(user.password, data.get('password'))
     if user and is_valid:
         login_user(user)
         return jsonify({"message": "Login successful"})
     return jsonify({"message": "Invalid credentials"}), 401
 
-@app.route("/logout")
+@app.route("/api/logout/")
 def logout():
     logout_user()
     return redirect(url_for('home'))
 
+@app.route("/api/user/", methods=["GET"])
+def user():
+    if request.method == "GET":
+        return jsonify({"user": Users.query.get(1).username})
+
 @app.route("/")
 def home():
-    return url_for('home')
+    return 'Home'
 
 if __name__ == "__main__":
     # with app.app_context():
     #     create_user_types()
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=8000)
