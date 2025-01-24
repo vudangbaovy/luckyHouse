@@ -59,7 +59,7 @@ def logout():
 
 @app.route("/")
 def home():
-    return "Home"
+    return url_for('home')
 
 if __name__ == "__main__":
     app.run(debug=True)

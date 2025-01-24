@@ -1,26 +1,23 @@
 import './App.css';
-import {
-  Home,
-  Login,
-  UserView,
-  AdminView,
-  GuestView
-} from "./pages";
-import Navbar from "./components/Navbar";
+import React from 'react';
+import { Routes, Route, BrowserRouter } from 'react-router-dom';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import UserView from './pages/UserView';
+import AdminView from './pages/AdminView';
+import GuestView from './pages/GuestView';
 
 function App() {
   return (
-    <div>
-        <Navbar/>
+    <BrowserRouter>
         <Routes>
-            <Route path="/" element={<Home />}>
+            <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/user" element={<UserView />} />
             <Route path="/admin" element={<AdminView />} />
             <Route path="/guest" element={<GuestView />} />
-            </Route>
       </Routes>
-    </div>
+    </BrowserRouter>
   );
 }
 
