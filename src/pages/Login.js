@@ -1,25 +1,29 @@
 import React from 'react';
+import { TextField, Button, Container, Typography, Box } from '@mui/material';
 
-// The Login component is a form with two input fields: one for the username and one for the password. The form also has a submit button.
-// Function to interact with the login API in backend app.py
 function Login() {
-    // Send username and password to the backend
     const handleSubmit = (event) => {
         event.preventDefault();
-        const data = new FormData(event.target);
+        const form = event.target;
+        const jsonData = {
+            username: form.username.value,
+            password: form.password.value
+        };
+
         fetch('http://localhost:8000/api/login', {
             method: 'POST',
-            mode: 'no-cors',
-            headers: { 
-            'Content-Type': 'application/json'
+            headers: {
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify(Object.fromEntries(data)),
+            body: JSON.stringify(jsonData),
         })
-        .then((response) => {
+        .then(async (response) => {
             if (!response.ok) {
-            throw new Error('Network response was not ok ' + response.statusText);
+                console.log(response);
+                throw new Error('Network response was not ok ' + response.statusText);
             }
-            return response.json();
+            await response.json();
+            window.location.href = '/admin';
         })
         .then((data) => {
             console.log(data);
@@ -30,20 +34,35 @@ function Login() {
     };
 
     return (
-        <div>
-            <h1>Login</h1>
-            <form onSubmit={handleSubmit}>
-                <label>
-                    Username:
-                    <input type="text" name="username" />
-                </label>
-                <label>
-                    Password:
-                    <input type="password" name="password" />
-                </label>
-                <button type="submit">Log In</button>
-            </form>
-        </div>
+        <Container maxWidth="sm">
+            <Box sx={{ mt: 8 }}>
+                <Typography variant="h4" component="h1" gutterBottom>
+                    Login
+                </Typography>
+                <form onSubmit={handleSubmit}>
+                    <TextField
+                        label="Username"
+                        name="username"
+                        variant="outlined"
+                        margin="normal"
+                        fullWidth
+                        required
+                    />
+                    <TextField
+                        label="Password"
+                        name="password"
+                        type="password"
+                        variant="outlined"
+                        margin="normal"
+                        fullWidth
+                        required
+                    />
+                    <Button type="submit" variant="contained" color="primary" fullWidth>
+                        Log In
+                    </Button>
+                </form>
+            </Box>
+        </Container>
     );
 }
 

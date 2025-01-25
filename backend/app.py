@@ -1,21 +1,21 @@
-from flask import Flask, request, url_for, redirect
+from flask import Flask, request, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import insert
 from flask_login import LoginManager, UserMixin, login_user, logout_user
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 import configparser
 import os
-import jsonify
+
+user_types = ['admin', 'customer', 'tenant']
 
 config = configparser.ConfigParser()
 config.read(os.path.abspath(os.path.join(".ini")))
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})  # Enable CORS for all routes
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite"
 app.config["SECRET_KEY"] = config.get('CONNECTION', 'SECRET_KEY')
-Bcrypt = Bcrypt(app)
-CORS(app)
+bcrypt = Bcrypt(app)
 db = SQLAlchemy()
 
 login_manager = LoginManager()
@@ -23,6 +23,8 @@ login_manager.init_app(app)
 
 class Users(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    # first_name = db.Column(db.String(250))
+    # last_name = db.Column(db.String(250))
     username = db.Column(db.String(250), unique=True, nullable=False)
     password = db.Column(db.String(250), nullable=False)
     user_type = db.Column(db.String(250), nullable=False)
@@ -33,78 +35,82 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-# Inject different user types into the database
-def create_user_types():
-    landlord = Users(username='landlord', password='landlord', user_type='admin')
-    tenant = Users(username='tenant', password='tenant', user_type='tenant')
-    customer = Users(username='customer', password='customer', user_type='customer')
-
-    commit = True
-    if Users.query.filter_by(username='landlord').first() is None:
-        db.session.add(landlord)
-        print('landlord added')
-    else:
-        print('landlord already exists')
-        commit = False
-    if Users.query.filter_by(username='tenant').first() is None:
-        db.session.add(tenant)
-        print('tenant added')
-    else:
-        print('tenant already exists')
-        commit = False
-    if Users.query.filter_by(username='customer').first() is None:
-        db.session.add(customer)
-        print('customer added')
-    else:
-        print('customer already exists')
-        commit = False
-    if commit:
-        db.session.commit()
-
 # "user loader" callback that returns a User object given a user id (Flask-Login)
 @login_manager.user_loader
 def loader_user(user_id):
     return Users.query.get(user_id)
 
+@login_manager.unauthorized_handler
+def unauthorized():
+    return jsonify({"error": "Unauthorized"}), 401
+
 # Priviledged to only admins
-@app.route("/api/create/", methods=["POST", "GET"])
+@app.route("/user/create", methods=["POST"])
 def create():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    hashed_password = Bcrypt.generate_password_hash(password).decode('utf-8')
-    user_type = request.form.get('user_type')
-    user = Users(username=username, password=hashed_password, user_type=user_type)
+    data = request.get_json()
+    if Users.query.filter_by(username=data.get('username')).first():
+        return jsonify({"message": "User already exists"})
+    if data.get('user_type') not in user_types:
+        return jsonify({"message": "Invalid user type"})
+    user = Users(username=data.get('username'), password=bcrypt.generate_password_hash(data.get('password')).decode('utf-8'), user_type=data.get('user_type'))
+    # user.first_name = data.get('first_name') if data.get('first_name') else 'N/A'
+    # user.last_name = data.get('last_name') if data.get('last_name') else 'N/A'
     db.session.add(user)
     db.session.commit()
-    return 0
+    return jsonify({"message": "User created successfully"})
 
-@app.route("/api/login/", methods=["POST", "GET"])
+@app.route("/user/update", methods=["POST"])
+def update_user():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    user_type = data.get('user_type')
+
+    user = Users.query.filter_by(username=username).first()
+    if user:
+        user.password = bcrypt.generate_password_hash(password).decode('utf-8')
+        user.user_type = user_type if user_type in user_types else user.user_type
+        # user.first_name = data.get('first_name') if data.get('first_name') else 'N/A'
+        # user.last_name = data.get('last_name') if data.get('last_name') else 'N/A'
+        db.session.commit()
+        return "User updated successfully"
+    return "User does not exist"
+
+@app.route("/user/delete", methods=["POST"])
+def delete_user():
+    data = request.get_json()
+    username = data.get('username')
+    user = Users.query.filter_by(username=username).first()
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        return "User deleted successfully"
+    return "User does not exist"
+
+@app.route("/user/get", methods=["GET"])
+def get_users():
+    users = Users.query.all()
+    return jsonify([{"username": user.username, "user_type": user.user_type} for user in users])
+
+@app.route("/api/login", methods=["POST", "GET"])
 def login():
     if request.method == "GET":
-        return 'Hello World'
+        return 'Hi'
     data = request.get_json()
     user = Users.query.filter_by(username=data.get('username')).first()
-    is_valid = Bcrypt.check_password_hash(user.password, data.get('password'))
-    if user and is_valid:
+    if user and bcrypt.check_password_hash(user.password, data.get('password')):
         login_user(user)
         return jsonify({"message": "Login successful"})
     return jsonify({"message": "Invalid credentials"}), 401
 
-@app.route("/api/logout/")
+@app.route("/api/logout", methods=["POST"])
 def logout():
     logout_user()
-    return redirect(url_for('home'))
-
-@app.route("/api/user/", methods=["GET"])
-def user():
-    if request.method == "GET":
-        return jsonify({"user": Users.query.get(1).username})
+    return jsonify({"message": "Logout successful"})
 
 @app.route("/")
 def home():
     return 'Home'
 
 if __name__ == "__main__":
-    # with app.app_context():
-    #     create_user_types()
     app.run(debug=True, port=8000)
