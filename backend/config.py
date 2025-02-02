@@ -9,3 +9,4 @@ class Config:
     SECRET_KEY = config.get('CONNECTION', 'SECRET_KEY')
     SESSION_PERMANENT = False
     SESSION_TYPE = "filesystem"
+    SESSION_COOKIE_SAMESITE = "None"
