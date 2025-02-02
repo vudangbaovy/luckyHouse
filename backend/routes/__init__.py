@@ -22,7 +22,7 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_cred
 
 @login_manager.user_loader
 def loader_user(id):
-    return Users.query.get(id)
+    return Users.query.get(int(id))
 
 @login_manager.unauthorized_handler
 def unauthorized():

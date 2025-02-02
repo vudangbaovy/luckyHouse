@@ -40,7 +40,6 @@ function Header() {
     // Call the logout API
     fetch('http://localhost:8000/api/logout', {
         method: 'POST',
-        credentials: "include",
         headers: {
             'Content-Type': 'application/json'
         },
