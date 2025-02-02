@@ -40,6 +40,7 @@ function Header() {
     // Call the logout API
     fetch('http://localhost:8000/api/logout', {
         method: 'POST',
+        credentials: "include",
         headers: {
             'Content-Type': 'application/json'
         },
@@ -49,10 +50,13 @@ function Header() {
             console.log(response);
             throw new Error('Network response was not ok ' + response.statusText);
         }
-        await response.json();
+        return response.json();
     })
-    // Redirect to the login page
-    window.location.href = '/';
+    .then(() => {
+        // Redirect to the login page
+        console.log('Logged out successfully');
+        window.location.href = '/';
+    })
   };
 
 return (

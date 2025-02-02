@@ -72,12 +72,5 @@ def delete_user():
 @login_required
 def get_users():
     check_admin()
-
     users = Users.query.all()
     return jsonify([{"id": user.id, "username": user.username, "user_type": user.user_type} for user in users])
-
-@bp.route("/dashboard", methods=["GET"])
-@login_required
-def dashboard():
-    check_admin()
-    return 'Hi'

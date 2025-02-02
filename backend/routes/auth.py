@@ -25,6 +25,9 @@ def login():
 @bp.route("/logout", methods=["POST"])
 @login_required
 def logout():
-    logout_user()
-    session.pop('user_type', None)
-    return jsonify({"message": "Logout successful"})
+    try:
+        logout_user()
+        session.clear()
+        return jsonify({"message": "Logout successful"}), 200
+    except Exception as e:
+        return jsonify({"message": "An error occurred during logout", "error": str(e)}), 500
