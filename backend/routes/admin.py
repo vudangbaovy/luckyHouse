@@ -6,7 +6,7 @@ from flask_bcrypt import Bcrypt
 bcrypt = Bcrypt()
 bp = Blueprint('admin', __name__, url_prefix="/admin")
 
-user_types = ['admin', 'customer', 'tenant']
+user_types = ['admin', 'viewer', 'tenant']
 
 def check_admin():
     if session.get('user_type') != 'admin':

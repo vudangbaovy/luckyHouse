@@ -3,9 +3,9 @@ import React from 'react';
 import { Routes, Route, BrowserRouter } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import UserView from './pages/TenantView';
+import TenantView from './pages/TenantView';
 import AdminView from './pages/AdminView';
-import GuestView from './pages/CustomerView';
+import ViewerView from './pages/ViewerView';
 import Header from './components/Header';
 
 function App() {
@@ -17,9 +17,9 @@ function App() {
           <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/user" element={<UserView />} />
-              <Route path="/admin/dashboard" element={<AdminView />} />
-              <Route path="/guest" element={<GuestView />} />
+              <Route path="/tenant" element={<TenantView />} />
+              <Route path="/admin" element={<AdminView />} />
+              <Route path="/viewer" element={<ViewerView />} />
           </Routes>
       </BrowserRouter>
     </div>

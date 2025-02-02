@@ -19,7 +19,7 @@ def login():
         if logged and user.user_type == 'admin':
             print('Admin logged in')
             print(session)
-            return redirect(url_for('admin.dashboard'))
+            return jsonify({"message": "Login successful", "user_type": user.user_type})
     return jsonify({"message": "Invalid credentials"}), 401
 
 @bp.route("/logout", methods=["POST"])
