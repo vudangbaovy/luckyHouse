@@ -21,9 +21,8 @@ Session(app)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 
 @login_manager.user_loader
-def loader_user(user_id):
-    print('User loader')
-    return Users.query.get(int(user_id))
+def loader_user(id):
+    return Users.query.get(id)
 
 @login_manager.unauthorized_handler
 def unauthorized():

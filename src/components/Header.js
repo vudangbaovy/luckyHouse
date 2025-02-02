@@ -50,7 +50,7 @@ function Header() {
             console.log(response);
             throw new Error('Network response was not ok ' + response.statusText);
         }
-        return response.json();
+        await response.json();
     })
     .then(() => {
         // Redirect to the login page
