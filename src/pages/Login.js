@@ -23,7 +23,7 @@ function Login() {
                 throw new Error('Network response was not ok ' + response.statusText);
             }
             await response.json();
-            window.location.href = '/admin';
+            // window.location.href = '/admin';
         })
         .then((data) => {
             console.log(data);

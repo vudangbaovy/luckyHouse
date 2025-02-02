@@ -7,7 +7,7 @@ const AdminView = () => {
 
     useEffect(() => {
         // Fetch users from the database
-        axios.get('http://localhost:8000/user/get')
+        axios.get('http://localhost:8000/admin/user/get')
             .then(response => {
                 setUsers(response.data);
             })
