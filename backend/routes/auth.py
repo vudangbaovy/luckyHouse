@@ -29,9 +29,3 @@ def logout():
     if logged_out:
         return jsonify({"message": "Logout successful"}), 200
     return jsonify({"message": "Logout failed"}), 400
-
-@bp.route('/check_user', methods=["GET"])
-def check_user():
-    if session.get('user_type'):
-        return jsonify({"user_type": session.get('user_type')})
-    return jsonify({"user_type": "guest"})

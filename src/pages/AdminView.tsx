@@ -11,13 +11,20 @@ interface User {
 
 const AdminView: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
+    const [authed, setAuthed] = useState<boolean>(true);
 
+    
     useEffect(() => {
         // Fetch users from the database with credentials
         axios.get('http://localhost:8000/admin/user/get', {
             withCredentials: true
         })
             .then(response => {
+                if (response.status !== 200) {
+                    console.log(response);
+                    setAuthed(false);
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
                 setUsers(response.data);
             })
             .catch(error => {
@@ -26,6 +33,8 @@ const AdminView: React.FC = () => {
     }, []);
 
     return (
+        // Only render the component if the user is authenticated
+        authed ?       
         <Container maxWidth="md">
             <Typography variant="h4" component="h1" gutterBottom>
                 Admin View
@@ -50,6 +59,11 @@ const AdminView: React.FC = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+        </Container> : 
+        <Container maxWidth="md">
+            <Typography variant="h4" component="h1" gutterBottom>
+            Not Authorized
+            </Typography>
         </Container>
     );
 };
