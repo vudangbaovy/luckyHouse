@@ -1,49 +1,45 @@
 import React from 'react';
-import { TextField, Button, Container, Typography, Box } from '@mui/material';
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+import { Typography, TextField, Button, Box, Container } from '@mui/material';
+import axios from 'axios';
 
-function Login() {
+const Login: React.FC = () => {
     const navigate = useNavigate();
-    const handleSubmit = (event) => {
+
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const form = event.target;
+        const form = event.currentTarget;
+        const formData = new FormData(form);
         const jsonData = {
-            username: form.username.value,
-            password: form.password.value
+            username: formData.get('username') as string,
+            password: formData.get('password') as string
         };
 
-        fetch('http://localhost:8000/api/login', {
-            method: 'POST',
-            credentials: "include",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(jsonData),
-        })
-        .then(async (response) => {
-            if (!response.ok) {
+        axios.post('http://localhost:8000/api/login', jsonData, { withCredentials: true })
+            .then((response) => {
+            if (response.status !== 200) {
                 console.log(response);
                 throw new Error('Network response was not ok ' + response.statusText);
             }
-            return response.json();
-        })
-        .then((data) => {
+            return response.data;
+            })
+            .then((data) => {
             console.log(data);
             if (data && data.user_type) {
                 if (data.user_type === 'admin') {
-                    navigate('/admin');
+                navigate('/admin');
                 } else if (data.user_type === 'tenant') {
-                    navigate('/tenant');
+                navigate('/tenant');
                 } else if (data.user_type === 'viewer') {
-                    navigate('/viewer');
+                navigate('/viewer');
                 }
             } else {
                 console.error('Invalid data:', data);
             }
-        })
-        .catch((error) => {
-            console.error('There was a problem with the fetch operation:', error);
-        });
+            })
+            .catch((error) => {
+            console.error('There was a problem with the axios operation:', error);
+            });
     };
 
     return (

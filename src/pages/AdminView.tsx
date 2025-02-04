@@ -2,8 +2,15 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Container, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
-const AdminView = () => {
-    const [users, setUsers] = useState([]);
+// Define the User type
+interface User {
+    id: number;
+    username: string;
+    user_type: string;
+}
+
+const AdminView: React.FC = () => {
+    const [users, setUsers] = useState<User[]>([]);
 
     useEffect(() => {
         // Fetch users from the database with credentials
@@ -33,7 +40,7 @@ const AdminView = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {users.map(user => (
+                        {users.map((user: User) => (
                             <TableRow key={user.id}>
                                 <TableCell>{user.id}</TableCell>
                                 <TableCell>{user.username}</TableCell>
