@@ -10,7 +10,13 @@ with app.app_context():
     db.session.commit()
 
     admin = Users(username='admin', password='admin', user_type='admin')
+    tenant = Users(username='tenant', password='tenant', user_type='tenant')
+    viewer = Users(username='viewer', password='viewer', user_type='viewer')
     db.session.add(admin)
+    db.session.add(tenant)
+    db.session.add(viewer)
 
     db.session.commit()
-    print('Admin user created successfully')
+    print('Admin, tenant, viewer created successfully')
+    rows = db.session.query(Users).all()
+    print([row.id for row in rows])

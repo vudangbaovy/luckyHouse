@@ -29,7 +29,7 @@ const Header: React.FC = () => {
     };
 
     const handleLogout = (event: MouseEvent<HTMLElement>): void => {
-        axios.post('http://localhost:8000/api/logout', {}, { withCredentials: true })
+        axios.post('http://localhost:8000/auth/logout', {}, { withCredentials: true })
             .then((response) => {
             console.log('Logged out successfully');
             window.location.href = '/';

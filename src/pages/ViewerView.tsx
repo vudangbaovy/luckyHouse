@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ViewerView: React.FC = () => {
+const ViewerView = () => {
     return (
         <div>
             <h1>Viewer View</h1>

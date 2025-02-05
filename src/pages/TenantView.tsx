@@ -1,6 +1,6 @@
 import React from 'react';
 
-const TenantView: React.FC = () => {
+const TenantView = () => {
     return (
         <div>
             <h1>Tenant View</h1>

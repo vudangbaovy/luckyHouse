@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Typography, TextField, Button, Box, Container } from '@mui/material';
 import axios from 'axios';
 
-const Login: React.FC = () => {
+const Login = () => {
     const navigate = useNavigate();
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -15,27 +15,17 @@ const Login: React.FC = () => {
             password: formData.get('password') as string
         };
 
-        axios.post('http://localhost:8000/api/login', jsonData, { withCredentials: true })
+        axios.post('http://localhost:8000/auth/login', jsonData, { withCredentials: true })
             .then((response) => {
-            if (response.status !== 200) {
-                console.log(response);
-                throw new Error('Network response was not ok ' + response.statusText);
-            }
-            return response.data;
+                if (response.status !== 200) {
+                    console.log(response);
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.data;
             })
             .then((data) => {
-            console.log(data);
-            if (data && data.user_type) {
-                if (data.user_type === 'admin') {
-                navigate('/admin');
-                } else if (data.user_type === 'tenant') {
-                navigate('/tenant');
-                } else if (data.user_type === 'viewer') {
-                navigate('/viewer');
-                }
-            } else {
-                console.error('Invalid data:', data);
-            }
+                console.log(data);
+                navigate('/dashboard');
             })
             .catch((error) => {
             console.error('There was a problem with the axios operation:', error);

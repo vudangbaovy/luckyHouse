@@ -9,10 +9,9 @@ interface User {
     user_type: string;
 }
 
-const AdminView: React.FC = () => {
+const AdminView = () => {
     const [users, setUsers] = useState<User[]>([]);
-    const [authed, setAuthed] = useState<boolean>(true);
-
+    const [authed, setAuthed] = useState<boolean>(false);
     
     useEffect(() => {
         // Fetch users from the database with credentials
@@ -22,9 +21,9 @@ const AdminView: React.FC = () => {
             .then(response => {
                 if (response.status !== 200) {
                     console.log(response);
-                    setAuthed(false);
                     throw new Error('Network response was not ok ' + response.statusText);
                 }
+                setAuthed(true);
                 setUsers(response.data);
             })
             .catch(error => {

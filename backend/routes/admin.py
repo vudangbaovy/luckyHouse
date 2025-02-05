@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, g
 from flask_login import login_required
 from models import db, Users
 from flask_bcrypt import Bcrypt
@@ -8,6 +8,7 @@ bp = Blueprint('admin', __name__, url_prefix="/admin")
 
 user_types = ['admin', 'viewer', 'tenant']
 
+@bp.before_request
 def check_admin():
     if session.get('user_type') != 'admin':
         return jsonify({"error": "Unauthorized"}), 403
@@ -16,8 +17,6 @@ def check_admin():
 @bp.route("/user/create", methods=["POST"])
 @login_required
 def create_user():
-    check_admin()
-
     data = request.get_json()
     if Users.query.filter_by(username=data.get('username')).first():
         return jsonify({"message": "User already exists"})
@@ -38,8 +37,6 @@ def create_user():
 @bp.route("/user/update", methods=["POST"])
 @login_required
 def update_user():
-    check_admin()
-    
     data = request.get_json()
     username = data.get('username')
     user = Users.query.filter_by(username=username).first()
@@ -56,8 +53,6 @@ def update_user():
 @bp.route("/user/delete", methods=["POST"])
 @login_required
 def delete_user():
-    check_admin()
-    
     data = request.get_json()
     username = data.get('username')
     user = Users.query.filter_by(username=username).first()
@@ -71,6 +66,6 @@ def delete_user():
 @bp.route("/user/get", methods=["GET"])
 @login_required
 def get_users():
-    check_admin()
+    print('Session in admin get: ', session)
     users = Users.query.all()
     return jsonify([{"id": user.id, "username": user.username, "user_type": user.user_type} for user in users])
