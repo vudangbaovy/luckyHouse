@@ -29,3 +29,14 @@ def logout():
     print(f'{session.get("user_type")} logged out with session {session}')
     logout_user()
     return jsonify({"message": "Logout successful"}), 200
+
+@bp.route('/user', methods=["GET"])
+@login_required
+def get_type():
+    user_type = session.get('user_type')
+    print(f'{user_type} checked session {session}')
+
+    if not user_type:
+        return jsonify({"error": "Credentials not found"}), 404
+    
+    return jsonify({"user_type": session.get('user_type')})
