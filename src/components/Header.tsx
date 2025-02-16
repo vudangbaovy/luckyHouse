@@ -1,14 +1,20 @@
-import React, { useState, MouseEvent } from 'react';
+import React, { useState, MouseEvent, useEffect } from 'react';
 import { AppBar, Box, Toolbar, Typography, IconButton, Menu, Container, MenuItem, Tooltip, Avatar } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const pages = ['Home', 'About', 'Contact'];
 const settings = ['Profile', 'Dashboard', 'Logout'];
 
-const Header: React.FC = () => {
+interface HeaderProps {
+    logged_in: boolean;
+}
+
+const Header: React.FC<HeaderProps> = ({ logged_in }) => {
+    const navigate = useNavigate();
     const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
+    const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
     const handleOpenNavMenu = (event: MouseEvent<HTMLElement>) => {
         setAnchorElNav(event.currentTarget);
@@ -22,7 +28,6 @@ const Header: React.FC = () => {
         setAnchorElUser(null);
     };
 
-    const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
     const handleCloseNavMenu = () => {
         setAnchorElNav(null);
@@ -32,12 +37,14 @@ const Header: React.FC = () => {
         axios.post('http://localhost:8000/auth/logout', {}, { withCredentials: true })
             .then((response) => {
             console.log('Logged out successfully');
-            window.location.href = '/';
+            logged_in = false;
+            window.location.reload();
             })
             .catch((error) => {
             console.error('There was an error logging out!', error);
             });
     };
+
     return (
             <AppBar position="static">
             <Container>
@@ -112,7 +119,8 @@ const Header: React.FC = () => {
                     >
                         LUCKY HOUSE
                     </Typography>
-                    <Box sx={{ flexGrow: 0 }}>
+                    
+                    {logged_in && <Box sx={{ flexGrow: 0 }}>
                         <Tooltip title="Open settings">
                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                                 <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
@@ -143,7 +151,7 @@ const Header: React.FC = () => {
                                 </MenuItem>
                             ))}
                         </Menu>
-                    </Box>
+                    </Box>}
                 </Toolbar>
             </Container>
         </AppBar>

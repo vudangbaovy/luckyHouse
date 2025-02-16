@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, TextField, Button, Box, Container } from '@mui/material';
+import { Typography, TextField, Button, Box, Container, Snackbar, Alert } from '@mui/material';
 import axios from 'axios';
+import { Warning } from '@mui/icons-material';
 
 const Login = () => {
     const navigate = useNavigate();
+    const [openSnackBar, setOpenSnackbar] = useState(false);
+    const [snackbarMsg, setSnackbarMessage] = useState("");
+
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -25,12 +29,19 @@ const Login = () => {
             })
             .then((data) => {
                 console.log(data);
-                navigate('/dashboard');
+                navigate('/');
             })
             .catch((error) => {
             console.error('There was a problem with the axios operation:', error);
+            setSnackbarMessage(error.response.data['message']);
             });
     };
+    
+    useEffect(() => {
+        if (snackbarMsg) {
+          setOpenSnackbar(true);
+        }
+      }, [snackbarMsg]);
 
     return (
         <Container maxWidth="sm">
@@ -61,6 +72,16 @@ const Login = () => {
                     </Button>
                 </form>
             </Box>
+            <Snackbar
+              open={openSnackBar}
+              autoHideDuration={6000}
+              onClose={() => setOpenSnackbar(false)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+              <Alert onClose={() => setOpenSnackbar(false)} severity={'warning'}>
+                {snackbarMsg}
+              </Alert>
+            </Snackbar>
         </Container>
     );
 }
