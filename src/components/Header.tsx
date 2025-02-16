@@ -1,18 +1,16 @@
-import React, { useState, MouseEvent, useEffect } from 'react';
+import React, { useState, MouseEvent } from 'react';
 import { AppBar, Box, Toolbar, Typography, IconButton, Menu, Container, MenuItem, Tooltip, Avatar } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import user_icon from '../assets/user_icon.png';
 
-const pages = ['Home', 'About', 'Contact'];
-const settings = ['Profile', 'Dashboard', 'Logout'];
+const settings = ['Profile', 'Logout'];
 
 interface HeaderProps {
     logged_in: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({ logged_in }) => {
-    const navigate = useNavigate();
     const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
@@ -28,7 +26,6 @@ const Header: React.FC<HeaderProps> = ({ logged_in }) => {
         setAnchorElUser(null);
     };
 
-
     const handleCloseNavMenu = () => {
         setAnchorElNav(null);
     };
@@ -36,24 +33,23 @@ const Header: React.FC<HeaderProps> = ({ logged_in }) => {
     const handleLogout = (event: MouseEvent<HTMLElement>): void => {
         axios.post('http://localhost:8000/auth/logout', {}, { withCredentials: true })
             .then((response) => {
-            console.log('Logged out successfully');
-            logged_in = false;
-            window.location.reload();
+                console.log('Logged out successfully');
+                window.location.reload();
             })
             .catch((error) => {
-            console.error('There was an error logging out!', error);
+                console.error('There was an error logging out!', error);
             });
     };
 
     return (
-            <AppBar position="static">
+        <AppBar position="static">
             <Container>
-                <Toolbar>
+                <Toolbar sx={{ justifyContent: 'space-between', backgroundColor: 'primary' }}>
                     <Typography
-                        variant="h6"
+                        variant="h1"
                         noWrap
                         component="a"
-                        href="#app-bar-with-responsive-menu"
+                        href="/"
                         sx={{
                             mr: 2,
                             display: { xs: 'none', md: 'flex' },
@@ -66,46 +62,11 @@ const Header: React.FC<HeaderProps> = ({ logged_in }) => {
                     >
                         LUCKY HOUSE
                     </Typography>
-
-                    <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-                        <IconButton
-                            size="large"
-                            aria-label="account of current user"
-                            aria-controls="menu-appbar"
-                            aria-haspopup="true"
-                            onClick={handleOpenNavMenu}
-                            color="inherit"
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                        <Menu
-                            id="menu-appbar"
-                            anchorEl={anchorElNav}
-                            anchorOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'left',
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'left',
-                            }}
-                            open={Boolean(anchorElNav)}
-                            onClose={handleCloseNavMenu}
-                            sx={{ display: { xs: 'block', md: 'none' } }}
-                        >
-                            {pages.map((page) => (
-                                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                                    <Typography sx={{ textAlign: 'center' }}>{page}</Typography>
-                                </MenuItem>
-                            ))}
-                        </Menu>
-                    </Box>
                     <Typography
-                        variant="h5"
+                        variant="h1"
                         noWrap
                         component="a"
-                        href="#app-bar-with-responsive-menu"
+                        href="/"
                         sx={{
                             mr: 2,
                             display: { xs: 'flex', md: 'none' },
@@ -123,7 +84,7 @@ const Header: React.FC<HeaderProps> = ({ logged_in }) => {
                     {logged_in && <Box sx={{ flexGrow: 0 }}>
                         <Tooltip title="Open settings">
                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                                <Avatar alt="Remy Sharp" src={user_icon} />
                             </IconButton>
                         </Tooltip>
                         <Menu

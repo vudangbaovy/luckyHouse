@@ -11,7 +11,6 @@ interface User {
 
 const AdminView = () => {
     const [users, setUsers] = useState<User[]>([]);
-    const [authed, setAuthed] = useState<boolean>(false);
     
     useEffect(() => {
         // Fetch users from the database with credentials
@@ -23,7 +22,6 @@ const AdminView = () => {
                     console.log(response);
                     throw new Error('Network response was not ok ' + response.statusText);
                 }
-                setAuthed(true);
                 setUsers(response.data);
             })
             .catch(error => {
@@ -33,10 +31,9 @@ const AdminView = () => {
 
     return (
         // Only render the component if the user is authenticated
-        authed ?       
         <Container maxWidth="md">
-            <Typography variant="h4" component="h1" gutterBottom>
-                Admin View
+            <Typography variant="h2" component="h1" gutterBottom>
+                ADMIN VIEW
             </Typography>
             <TableContainer component={Paper}>
                 <Table>
@@ -58,13 +55,7 @@ const AdminView = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
-        </Container> : 
-        <Container maxWidth="md">
-            <Typography variant="h4" component="h1" gutterBottom>
-            Not Authorized
-            </Typography>
-        </Container>
-    );
+        </Container>);
 };
 
 export default AdminView;

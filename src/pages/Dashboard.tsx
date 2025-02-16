@@ -22,15 +22,15 @@ const Dashboard = () => {
       }, []);
 
     return (
-        <div>
+        <div style={{ padding: '30px' }}>
             {(() => {
             switch (userType) {
-                case 'admin':
-                return <AdminView />;
-                case 'tenant':
-                return <TenantView />;
-                case 'viewer':
-                return <ViewerView />;
+            case 'admin':
+            return <AdminView />;
+            case 'tenant':
+            return <TenantView />;
+            case 'viewer':
+            return <ViewerView />;
             }
             })()}
         </div>

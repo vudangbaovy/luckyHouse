@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, TextField, Button, Box, Container, Snackbar, Alert } from '@mui/material';
+import { Typography, TextField, Button, Box, Container, Snackbar, Alert, Grid2 } from '@mui/material';
 import axios from 'axios';
-import { Warning } from '@mui/icons-material';
 
-const Login = () => {
+const Login: React.FC = () => {
     const navigate = useNavigate();
     const [openSnackBar, setOpenSnackbar] = useState(false);
     const [snackbarMsg, setSnackbarMessage] = useState("");
-
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -32,55 +30,66 @@ const Login = () => {
                 navigate('/');
             })
             .catch((error) => {
-            console.error('There was a problem with the axios operation:', error);
-            setSnackbarMessage(error.response.data['message']);
+                console.error('There was a problem with the axios operation:', error);
+                setSnackbarMessage(error.response.data['message']);
             });
     };
-    
+
     useEffect(() => {
         if (snackbarMsg) {
-          setOpenSnackbar(true);
+            setOpenSnackbar(true);
         }
-      }, [snackbarMsg]);
+    }, [snackbarMsg]);
 
     return (
         <Container maxWidth="sm">
-            <Box sx={{ mt: 8 }}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Login
-                </Typography>
-                <form onSubmit={handleSubmit}>
-                    <TextField
-                        label="Username"
-                        name="username"
-                        variant="outlined"
-                        margin="normal"
-                        fullWidth
-                        required
-                    />
-                    <TextField
-                        label="Password"
-                        name="password"
-                        type="password"
-                        variant="outlined"
-                        margin="normal"
-                        fullWidth
-                        required
-                    />
-                    <Button type="submit" variant="contained" color="primary" fullWidth>
-                        Log In
-                    </Button>
-                </form>
-            </Box>
-            <Snackbar
-              open={openSnackBar}
-              autoHideDuration={6000}
-              onClose={() => setOpenSnackbar(false)}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            <Grid2
+                container
+                direction="column"
+                justifyContent="center"
+                alignItems="center"
+                spacing={2}
+                sx={{ minHeight: '100vh' }}
             >
-              <Alert onClose={() => setOpenSnackbar(false)} severity={'warning'}>
-                {snackbarMsg}
-              </Alert>
+                <Grid2>
+                    <Typography variant="h1" component="h1" gutterBottom>
+                        Log In
+                    </Typography>
+                </Grid2>
+                <Grid2>
+                    <form onSubmit={handleSubmit}>
+                        <TextField
+                            label="Username"
+                            name="username"
+                            variant="outlined"
+                            margin="normal"
+                            fullWidth
+                            required
+                        />
+                        <TextField
+                            label="Password"
+                            name="password"
+                            type="password"
+                            variant="outlined"
+                            margin="normal"
+                            fullWidth
+                            required
+                        />
+                        <Button type="submit" variant="contained" color="primary" fullWidth>
+                            Log In
+                        </Button>
+                    </form>
+                </Grid2>
+            </Grid2>
+            <Snackbar
+                open={openSnackBar}
+                autoHideDuration={6000}
+                onClose={() => setOpenSnackbar(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={() => setOpenSnackbar(false)} severity={'warning'}>
+                    {snackbarMsg}
+                </Alert>
             </Snackbar>
         </Container>
     );
