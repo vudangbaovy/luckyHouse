@@ -17,7 +17,7 @@
 .env.development.local
 .env.test.local
 .env.production.local
-.ini
+.env
 /backend/instance
 /backend/instance/*
 /backend/flask_session

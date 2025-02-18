@@ -1,17 +1,16 @@
-import configparser
 import os
-import redis
+import pymongo
+from dotenv import load_dotenv
 
-config = configparser.ConfigParser()
-config.read(os.path.abspath(os.path.join(".ini")))
+load_dotenv()
 
 class Config:
     SQLALCHEMY_DATABASE_URI = "sqlite:///db.sqlite"
-    SECRET_KEY = config.get('CONNECTION', 'SECRET_KEY')
+    SECRET_KEY = os.getenv('SECRET_KEY')
     SESSION_PERMANENT = True
-    SESSION_TYPE = 'redis'
+    SESSION_TYPE = 'mongodb'
+    SESSION_MONGODB = pymongo.MongoClient(os.getenv('MONGO_URI'))
     SESSION_USE_SIGNER = True
-    SESSION_REDIS = redis.from_url('redis://127.0.0.1:6379')
     SESSION_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_PATH = '/'
     SESSION_COOKIE_SECURE = True
