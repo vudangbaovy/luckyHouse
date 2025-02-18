@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Typography, Button, Grid2 } from '@mui/material';
+import { Container, Typography, Button, Grid2, CircularProgress } from '@mui/material';
 import axios from 'axios';
 import { Header } from '../components';
 import Dashboard from './Dashboard.tsx';
@@ -8,22 +8,35 @@ import logo from '../assets/logo.jpeg';
 
 const Home: React.FC = () => {
     const [loginState, setLoginState] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [userType, setUserType] = useState<string>('');
 
     const checkLogin = () => {
-        axios.get('http://localhost:8000/auth/check', { withCredentials: true })
+        axios.get('http://localhost:8000/auth/user', { withCredentials: true })
             .then((response) => {
-                console.log('Logged in', response.data['logged_in']);
+                console.log('Logged in as ', response.data['user_type']);
                 setLoginState(response.data['logged_in']);
+                setUserType(response.data['user_type']);
+                setLoading(false);
             })
             .catch((error) => {
-                console.error('Not logged in', error);
+                console.error('Not logged in - ', error);
                 setLoginState(false);
+                setLoading(false);
             });
     };
 
     useEffect(() => {
         checkLogin();
     }, []);
+
+    if (loading) {
+        return (
+            <Container maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <CircularProgress />
+            </Container>
+        );
+    }
 
     return (
         <div>
@@ -56,7 +69,7 @@ const Home: React.FC = () => {
                 </Container>
             )}
 
-            {loginState && <Dashboard />}
+            {loginState && <Dashboard userType={userType} />}
         </div>
     );
 }

@@ -4,23 +4,11 @@ import AdminView from './AdminView.tsx';
 import TenantView from './TenantView.tsx';
 import ViewerView from './ViewerView.tsx';
 
-const Dashboard = () => {
-    const [userType, setUserType] = useState<string>('');
+interface DashboardProps {
+    userType: string;
+}
 
-    const fetchData = async () => {
-        try {
-          const response = await axios.get('http://localhost:8000/auth/user', { withCredentials: true });
-          const userType = await response.data['user_type'];
-          setUserType(userType);
-        } catch (error) {
-          console.error('Error fetching data: ', error);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-      }, []);
-
+const Dashboard: React.FC<DashboardProps> = ({userType}) => {
     return (
         <div style={{ padding: '30px' }}>
             {(() => {

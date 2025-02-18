@@ -1,13 +1,12 @@
 import React, { useState, MouseEvent } from 'react';
 import { AppBar, Box, Toolbar, Typography, IconButton, Menu, Container, MenuItem, Tooltip, Avatar } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
 import axios from 'axios';
 import user_icon from '../assets/user_icon.png';
 
 const settings = ['Profile', 'Logout'];
 
 interface HeaderProps {
-    logged_in: boolean;
+    logged_in: Boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({ logged_in }) => {
