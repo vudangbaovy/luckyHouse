@@ -1,61 +1,64 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Container, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import React, { useState } from 'react';
+import { 
+    Container, Typography, Box, Tabs, Tab
+} from '@mui/material';
+import ListingView from '../components/listing/ListingView';
+import UserView from '../components/user/UserView';
 
-// Define the User type
-interface User {
-    id: number;
-    username: string;
-    user_type: string;
+interface TabPanelProps {
+    children?: React.ReactNode;
+    index: number;
+    value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+
+    return (
+        <Box
+            role="tabpanel"
+            id={`admin-tabpanel-${index}`}
+            aria-labelledby={`admin-tab-${index}`}
+            {...other}
+            sx={{
+                display: value !== index ? 'none' : 'block',
+                mt: 3
+            }}
+        >
+            {children}
+        </Box>
+    );
 }
 
 const AdminView = () => {
-    const [users, setUsers] = useState<User[]>([]);
-    
-    useEffect(() => {
-        // Fetch users from the database with credentials
-        axios.get('http://localhost:8000/admin/user/get', {
-            withCredentials: true
-        })
-            .then(response => {
-                if (response.status !== 200) {
-                    console.log(response);
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                setUsers(response.data);
-            })
-            .catch(error => {
-                console.error('There was an error fetching the users!', error);
-            });
-    }, []);
+    const [tabValue, setTabValue] = useState(0);
+
+    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+        setTabValue(newValue);
+    };
 
     return (
-        // Only render the component if the user is authenticated
-        <Container maxWidth="md">
-            <Typography variant="h2" component="h1" gutterBottom>
-                ADMIN VIEW
+        <Container maxWidth="lg">
+            <Typography variant="h2" component="h1" gutterBottom sx={{ mb: 4 }}>
+                ADMIN DASHBOARD
             </Typography>
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell><b>ID</b></TableCell>
-                            <TableCell><b>Username</b></TableCell>
-                            <TableCell><b>Type</b></TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {users.map((user: User) => (
-                            <TableRow key={user.id}>
-                                <TableCell>{user.id}</TableCell>
-                                <TableCell>{user.username}</TableCell>
-                                <TableCell>{user.user_type}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Container>);
+
+            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs value={tabValue} onChange={handleTabChange} aria-label="admin tabs">
+                    <Tab label="User Management" />
+                    <Tab label="Listing Management" />
+                </Tabs>
+            </Box>
+
+            <TabPanel value={tabValue} index={0}>
+                <UserView />
+            </TabPanel>
+
+            <TabPanel value={tabValue} index={1}>
+                <ListingView />
+            </TabPanel>
+        </Container>
+    );
 };
 
 export default AdminView;

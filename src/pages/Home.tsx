@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Container, Typography, Button, Grid2, CircularProgress } from '@mui/material';
 import axios from 'axios';
 import { Header } from '../components';
-import Dashboard from './Dashboard.tsx';
+import Dashboard from './Dashboard';
 import logo from '../assets/logo.jpeg';
 
 const Home: React.FC = () => {
@@ -15,13 +15,14 @@ const Home: React.FC = () => {
         axios.get('http://localhost:8000/auth/user', { withCredentials: true })
             .then((response) => {
                 console.log('Logged in as ', response.data['user_type']);
-                setLoginState(response.data['logged_in']);
+                setLoginState(true);
                 setUserType(response.data['user_type']);
                 setLoading(false);
             })
             .catch((error) => {
                 console.error('Not logged in - ', error);
                 setLoginState(false);
+                setUserType('');
                 setLoading(false);
             });
     };

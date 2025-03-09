@@ -1,8 +1,8 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import AdminView from './AdminView.tsx';
-import TenantView from './TenantView.tsx';
-import ViewerView from './ViewerView.tsx';
+import AdminView from './AdminView';
+import TenantView from './TenantView';
+import ViewerView from './ViewerView';
 
 interface DashboardProps {
     userType: string;

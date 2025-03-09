@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, TextField, Button, Box, Container, Snackbar, Alert, Grid2 } from '@mui/material';
+import { Typography, TextField, Button, Container, Snackbar, Alert, Grid2 } from '@mui/material';
 import axios from 'axios';
 
 const Login: React.FC = () => {

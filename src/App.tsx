@@ -1,11 +1,15 @@
 import './App.css';
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import {
-  Home,
-  Login
-} from './pages';
+import { Routes, Route, Link } from 'react-router-dom';
+import Home from './pages/Home';
+import Login from './pages/Login';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { firebaseConfig } from './firebaseconfig';
+
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
 const theme = createTheme({
   palette: {
@@ -49,12 +53,24 @@ const App: React.FC = () => {
     <div>
       <ThemeProvider theme={theme}>
         <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Home />} />
+          <Route path="*" element={<NoMatch />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </ThemeProvider>
     </div>
   );
-}
+};
 
 export default App;
+
+function NoMatch() {
+  return (
+    <div>
+      <h2>Nothing to see here!</h2>
+      <p>
+        <Link to="/">Go to the home page</Link>
+      </p>
+    </div>
+  );
+}
