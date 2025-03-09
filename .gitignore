@@ -20,10 +20,13 @@
 .env
 /backend/instance
 /backend/instance/*
-/backend/flask_session
+/backend/insert_mongo.py
+/backend/tempCodeRunnerFile.py
 /backend/__pycache__
 /backend/routes/__pycache__
 src/firebaseconfig.ts
+.firebase
+logs
 
 npm-debug.log*
 yarn-debug.log*
