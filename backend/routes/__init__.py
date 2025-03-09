@@ -1,35 +1,73 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from config import Config
-from models import Users, db
 from routes.auth import bp as auth_bp
 from routes.admin import bp as admin_bp
-from flask_login  import LoginManager
-from flask_session import Session
+from flask_login import LoginManager
 
-# Initialize Flask app
+import os, sys
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+from db import MongoConnector
+from user import User
+
+import logging
+logger = logging.getLogger('lucky_house')
+
 app = Flask(__name__)
 app.config.from_object(Config)
-
-# Setup extensions
-db.init_app(app)
+mongoConnector = MongoConnector()
 login_manager = LoginManager()
 login_manager.init_app(app)
-Session(app)
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
+CORS(app, 
+     resources={r"/*": {
+         "origins": "*",
+         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         "allow_headers": ["Content-Type", "Authorization"],
+         "expose_headers": ["Content-Type"],
+         "supports_credentials": True,
+         "send_wildcard": False,
+         "max_age": 86400
+     }})
+
+# Add OPTIONS handler for preflight requests
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = app.make_default_options_response()
+        return response
 
 @login_manager.user_loader
-def loader_user(id):
-    return Users.query.get(int(id))
+def load_user(username):
+    logger.info(f'load_user called with username: {username}')
+    collection = mongoConnector.get_collection('users')
+    try:
+        user = collection.find_one({'username': username})
+        if not user:
+            logger.error(f'No user found with username {username}')
+            return None
+        logger.info(f'Loaded user with username {username} and type {user["user_type"]}')
+        return User(
+            username=user['username'],
+            pw=user['password_hash'],
+            user_type=user['user_type'],
+            first_name=user.get('first_name'),
+            last_name=user.get('last_name'),
+            email=user.get('email'),
+            phone=user.get('phone'),
+            property_id=user.get('property_id')
+        )
+    except Exception as e:
+        logger.error(f'An error occurred in load_user: {e}')
+        return None
 
 @login_manager.unauthorized_handler
 def unauthorized():
+    logger.error('Unauthorized access')
     return jsonify({"error": "Unauthorized"}), 401
 
 # Register Blueprints
-app.register_blueprint(auth_bp)
-app.register_blueprint(admin_bp)
-
-# Create database tables
-with app.app_context():
-    db.create_all()
+app.register_blueprint(auth_bp, url_prefix="/auth")
+app.register_blueprint(admin_bp, url_prefix="/admin")
