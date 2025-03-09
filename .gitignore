@@ -23,6 +23,7 @@
 /backend/flask_session
 /backend/__pycache__
 /backend/routes/__pycache__
+src/firebaseconfig.ts
 
 npm-debug.log*
 yarn-debug.log*
