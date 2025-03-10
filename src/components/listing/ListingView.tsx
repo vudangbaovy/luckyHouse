@@ -6,7 +6,7 @@ import {
     TableHead, TableRow, Paper, Button, IconButton, Dialog, DialogTitle, 
     DialogContent, DialogActions, TextField, Stack, Box,
     Snackbar, Alert, CircularProgress, AlertColor,
-    ImageList, ImageListItem,
+    ImageList, ImageListItem, Switch
 } from '@mui/material';
 import { 
     Edit as EditIcon, 
@@ -14,9 +14,10 @@ import {
     AddPhotoAlternate as AddPhotoIcon,
     DeleteForever as DeletePhotoIcon,
     PersonAdd as PersonAddIcon, 
-    Visibility as VisibilityIcon
+    Visibility as VisibilityIcon,
+    AddLink as AddLinkIcon,
+    Link as LinkIcon
 } from '@mui/icons-material';
-import UserView from '../user/UserView';
 import ViewerView from '../user/ViewerView';
 
 interface Listing {
@@ -25,7 +26,7 @@ interface Listing {
     address: string;
     description: string;
     photos: string[];  // URLs of the photos
-    url_token: string;
+    open: boolean;
 }
 
 interface ListingFormData {
@@ -34,7 +35,7 @@ interface ListingFormData {
     address: string;
     description: string;
     photos: string[];
-    url_token: string;
+    open: boolean;
 }
 
 const initialFormData: ListingFormData = {
@@ -43,7 +44,7 @@ const initialFormData: ListingFormData = {
     address: '',
     description: '',
     photos: [],
-    url_token: ''
+    open: false
 };
 
 interface Credentials {
@@ -51,17 +52,12 @@ interface Credentials {
     password: string;
 }
 
-
-interface UrlGenerationResponse {
-    url_token: string;
-    full_url: string;
-}
-
 interface ListingFormFieldsProps {
     formData: ListingFormData;
     onFormChange: (field: keyof ListingFormData, value: any) => void;
     onAddPhoto: (file: File) => void;
     onRemovePhoto: (index: number) => void;
+    onOpenSwitch: (open: boolean) => void;
     isEdit: boolean;
 }
 
@@ -70,6 +66,7 @@ const ListingFormFields = React.memo(({
     onFormChange, 
     onAddPhoto,
     onRemovePhoto,
+    onOpenSwitch,
     isEdit 
 }: ListingFormFieldsProps) => {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -79,6 +76,10 @@ const ListingFormFields = React.memo(({
         if (file) {
             onAddPhoto(file);
         }
+    };
+
+    const handleOpenToggle = () => {
+        onOpenSwitch(!formData.open);
     };
 
     return (
@@ -155,6 +156,17 @@ const ListingFormFields = React.memo(({
                     ))}
                 </ImageList>
             </Box>
+            
+            {/* Open switch */}
+            <Box>
+                <Typography variant="h6" gutterBottom>
+                    Open Listing
+                </Typography>
+                <Switch
+                    checked={formData.open || false}
+                    onChange={handleOpenToggle}
+                />
+            </Box>
         </Stack>
     );
 });
@@ -170,7 +182,7 @@ const ListingView = () => {
     const [selectedListing, setSelectedListing] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [openUrlDialog, setOpenUrlDialog] = useState(false);
-    const [generatedUrl, setGeneratedUrl] = useState<UrlGenerationResponse | null>(null);
+    const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
     const [notification, setNotification] = useState<{
         open: boolean;
         message: string;
@@ -365,28 +377,10 @@ const ListingView = () => {
         }));
     }, []);
 
-    const handleGenerateUrl = (listingUrl: string) => {
+    const handleUrl = (listingUrl: string) => {
         setSelectedListing(listingUrl);
-        setLoading(true);
-        axios.post('http://localhost:8000/admin/listing/generate-url', { url: listingUrl }, {
-            withCredentials: true
-        })
-            .then(response => {
-                setGeneratedUrl(response.data);
-                setOpenUrlDialog(true);
-                showNotification('URL generated successfully', 'success');
-            })
-            .catch(error => {
-                console.error('Error generating URL:', error);
-                if (error.response?.status === 401 || error.response?.status === 403) {
-                    handleAuthError();
-                } else {
-                    showNotification(error.response?.data?.message || 'Error generating URL', 'error');
-                }
-            })
-            .finally(() => {
-                setLoading(false);
-            });
+        setGeneratedUrl('http://localhost:8000/listing/' + listingUrl); // TODO: Change this to the actual domain
+        setOpenUrlDialog(true);
     };
 
     const handleCopyToClipboard = (text: string) => {
@@ -412,14 +406,16 @@ const ListingView = () => {
             password: formData.get('password') as string,
             listing_url: selectedListing
         };
+
         axios.post('http://localhost:8000/admin/viewer/create', jsonData, {
             withCredentials: true
         })
             .then((response) => {
                 if (response.status !== 200) {
-                    console.log(response);
+                    showNotification('Failed to create viewer credentials', 'error');
                     throw new Error('Network response was not ok ' + response.statusText);
                 }
+                setOpenUrlDialog(false);
                 return response.data;
             })
             .catch((error) => {
@@ -485,9 +481,9 @@ const ListingView = () => {
                                     <IconButton 
                                         title="Add user to view listing"
                                         color="primary" 
-                                        onClick={() => handleGenerateUrl(listing.url)}
+                                        onClick={() => handleUrl(listing.url)}
                                     >
-                                        <PersonAddIcon />
+                                        <LinkIcon />
                                     </IconButton>
                                     <IconButton
                                         color="primary"
@@ -519,6 +515,7 @@ const ListingView = () => {
                             onFormChange={handleFormChange}
                             onAddPhoto={handleAddPhoto}
                             onRemovePhoto={handleRemovePhoto}
+                            onOpenSwitch={(open: boolean) => setFormData(prev => ({ ...prev, open }))}
                             isEdit={openEdit}
                         />
                     </Box>
@@ -570,12 +567,12 @@ const ListingView = () => {
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <TextField
                                     fullWidth
-                                    value={generatedUrl?.full_url || ''}
+                                    value={generatedUrl || ''}
                                     InputProps={{ readOnly: true }}
                                 />
                                 <Button 
                                     variant="outlined"
-                                    onClick={() => handleCopyToClipboard(generatedUrl?.full_url || '')}
+                                    onClick={() => handleCopyToClipboard(generatedUrl || '')}
                                 >
                                     Copy
                                 </Button>

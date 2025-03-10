@@ -46,14 +46,21 @@ def check_admin():
 @login_required
 def create_viewer():
     try:
-        data = request.get_json()
+        new_viewer = request.get_json()
+        username = new_viewer.get('username')
+        viewer = viewers_collection.find_one({"username": username})
+
+        if viewer:
+            logger.error(f'Viewer {new_viewer.get("username")} already exists')
+            return jsonify({"message": "Viewer already exists"}), 400
+        
         viewer = {
-            "username": data.get('username'),
-            "password": data.get('password'),
-            "listing_url": data.get('listing_url')
+            "username": new_viewer.get('username'),
+            "password": new_viewer.get('password'),
+            "listing_url": new_viewer.get('listing_url')
         }
         viewers_collection.insert_one(viewer)
-        logger.info(f'Viewer {data.get("username")} created by admin')
+        logger.info(f'Viewer {new_viewer.get("username")} created by admin')
         return jsonify({"message": "Viewer created successfully"}), 200
     except Exception as e:
         logger.error(f'An error occurred: {e}')
@@ -198,7 +205,7 @@ def get_users():
 def create_listing():
     try:
         data = request.get_json()
-        required_fields = ['url', 'name', 'address']
+        required_fields = ['url', 'name', 'address', 'open']
         
         # Validate required fields
         for field in required_fields:
@@ -206,7 +213,7 @@ def create_listing():
                 logger.error(f'Missing required field: {field}')
                 return jsonify({"message": f"Missing required field: {field}"}), 400
 
-        # Check if listing ID already exists
+        # Check if listing URL already exists
         if listings_collection.find_one({"url": data.get('url')}):
             logger.error(f'Listing with url {data.get("url")} already exists')
             return jsonify({"message": "Listing URL already exists"}), 400
@@ -221,7 +228,8 @@ def create_listing():
             "name": data.get('name'),
             "address": data.get('address'),
             "description": data.get('description', ''),
-            "photos": compressed_photos
+            "photos": compressed_photos,
+            "open": data.get('open', False)
         }
 
         listings_collection.insert_one(listing_doc)
@@ -257,11 +265,12 @@ def update_listing():
             "name": data.get('name'),
             "address": data.get('address'),
             "description": data.get('description', ''),
-            "photos": compressed_photos
+            "photos": compressed_photos,
+            "open": data.get('open', False)
         }
 
         listings_collection.update_one(
-            {"id": listing_url},
+            {"url": listing_url},
             {"$set": update_data}
         )
         logger.info(f'Listing {listing_url} updated successfully')
@@ -302,36 +311,6 @@ def get_listings():
     except Exception as e:
         logger.error(f'An error occurred: {e}')
         return jsonify({"message": "An error occurred"}), 500
-
-@bp.route("/listing/generate-url", methods=["POST"])
-@login_required
-def generate_listing_url():
-    try:
-        data = request.get_json()
-        listing_url = data.get('url')
-
-        if not listing_url:
-            logger.error('Missing listing ID')
-            return jsonify({"message": "Missing listing ID"}), 400
-
-        # Check if listing exists
-        existing_listing = listings_collection.find_one({"url": listing_url})
-        if not existing_listing:
-            logger.error(f'Listing with ID {listing_url} not found')
-            return jsonify({"message": "Listing not found"}), 404
-
-        # Return the generated URL and credentials
-        base_url = request.host_url.rstrip('/')  # Get base URL without trailing slash
-        full_url = f"{base_url}/listing/{listing_url}"
-        
-        logger.info(f'Generated viewing URL for listing {listing_url}')
-        return jsonify({
-            "url_token": listing_url,
-            "full_url": full_url,
-        }), 200
-    except Exception as e:
-        logger.error(f'An error occurred: {e}')
-        return jsonify({"message": "An error occurred"}), 500
     
 @bp.route("/listing/get-credentials/<listing_url>", methods=["POST"])
 def get_credentials(listing_url):
@@ -342,7 +321,7 @@ def get_credentials(listing_url):
     
     results = users_collection.find({"listing_url": listing_url}, {"username": 1, "password": 1, "_id": 0})
     if not results:
-        logger.error(f'Viewer for listing with ID {listing_url} not found')
+        logger.error(f'Viewer for listing with URL {listing_url} not found')
         return jsonify({"message": "No viewer account found for that listing"}), 404
     
     existing_viewers = [viewer for viewer in results]

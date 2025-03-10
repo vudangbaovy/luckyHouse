@@ -86,7 +86,6 @@ interface ViewerViewProps {
 
 const ViewerView = ({ listingUrl }: ViewerViewProps) => {
     const navigate = useNavigate();
-    const { listing_url } = useParams<{ listing_url: string }>();
     const [viewers, setViewers] = useState<Viewer[]>([]);
     const [openCreate, setOpenCreate] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
