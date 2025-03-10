@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { 
     Typography, Table, TableBody, TableCell, TableContainer, 
@@ -80,8 +80,13 @@ const ViewerFormFields = React.memo(({ formData, onFormChange, isEdit }: ViewerF
     );
 });
 
-const ViewerView = () => {
+interface ViewerViewProps {
+    listingUrl?: string;
+}
+
+const ViewerView = ({ listingUrl }: ViewerViewProps) => {
     const navigate = useNavigate();
+    const { listing_url } = useParams<{ listing_url: string }>();
     const [viewers, setViewers] = useState<Viewer[]>([]);
     const [openCreate, setOpenCreate] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
@@ -124,7 +129,10 @@ const ViewerView = () => {
                 if (response.status !== 200) {
                     throw new Error('Network response was not ok ' + response.statusText);
                 }
-                setViewers(response.data);
+                const filteredViewers = listingUrl 
+                    ? response.data.filter((viewer: Viewer) => viewer.listing_url === listingUrl)
+                    : response.data;
+                setViewers(filteredViewers);
             })
             .catch(error => {
                 console.error('There was an error fetching the viewers!', error);
@@ -141,7 +149,7 @@ const ViewerView = () => {
 
     useEffect(() => {
         fetchViewers();
-    }, []);
+    }, [listingUrl]);
 
     const handleFormChange = useCallback((field: keyof ViewerFormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));

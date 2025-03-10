@@ -17,6 +17,7 @@ import {
     Visibility as VisibilityIcon
 } from '@mui/icons-material';
 import UserView from '../user/UserView';
+import ViewerView from '../user/ViewerView';
 
 interface Listing {
     url: string;
@@ -396,6 +397,7 @@ const ListingView = () => {
 
     const handleViewCredentials = (listingUrl: string) => {
         fetchCredentials(listingUrl);
+        setSelectedListing(listingUrl);
         setOpenCredentialsDialog(true);
     };
 
@@ -544,7 +546,7 @@ const ListingView = () => {
             >
                 <DialogTitle>Viewer Accounts for this Listing</DialogTitle>
                 <DialogContent>
-                    <UserView />
+                    <ViewerView listingUrl={selectedListing || undefined} /> {/* Pass the selected listing URL */}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenCredentialsDialog(false)}>Close</Button>
@@ -653,4 +655,4 @@ const ListingView = () => {
     );
 };
 
-export default ListingView; 
+export default ListingView;
