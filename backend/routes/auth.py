@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
 from flask_login import login_required, login_user, logout_user, current_user
 from werkzeug.security import (
     check_password_hash, 
@@ -52,11 +52,8 @@ def login():
                 logger.error(f'Incorrect password for {data["username"]}')
                 return jsonify({"message": "Incorrect password"}), 401
 
-            currUser = User(username=user["username"], pw=user["password_hash"], user_type=user["user_type"], first_name=user.get("first_name"), last_name=user.get("last_name"), email=user.get("email"), phone=user.get("phone"), property_id=user.get("property_id"))
+            currUser = User(username=user["username"], pw=user["password_hash"], user_type=user["user_type"], first_name=user.get("first_name"), last_name=user.get("last_name"), email=user.get("email"), phone=user.get("phone"), listing_url=user.get("listing_url"))
             login_user(currUser, remember=True)
-            session['user_type'] = user['user_type']
-            session.modified = True
-            logger.info(f'User {data["username"]} logged in with session {session}')
             return jsonify({"message": "Login successful"}), 200
         else:
             logger.error(f'Username {data["username"]} not found')
