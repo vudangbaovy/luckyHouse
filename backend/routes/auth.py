@@ -15,11 +15,11 @@ logger = logging.getLogger('lucky_house')
 
 mongoClient = MongoConnector()
 bp = Blueprint('auth', __name__)
+collection = mongoClient.get_collection('users')
 
 @bp.route("/register", methods=["POST"])
 def register():
     try:
-        collection = mongoClient.get_collection("users")
         data = request.get_json()
 
         if collection.find_one({"username": str(data["username"])}):
@@ -43,7 +43,6 @@ def register():
 @bp.route("/login", methods=["POST"])
 def login():
     try:
-        collection = mongoClient.get_collection("users")
         data = request.get_json()
         user = collection.find_one({"username": str(data["username"])})
 

@@ -41,6 +41,74 @@ def check_admin():
 
 # User Management Routes
 
+# Create viewer (Admin only)
+@bp.route("/viewer/create", methods=["POST"])
+@login_required
+def create_viewer():
+    try:
+        data = request.get_json()
+        viewer = {
+            "username": data.get('username'),
+            "password": data.get('password'),
+            "listing_url": data.get('listing_url')
+        }
+        viewers_collection.insert_one(viewer)
+        logger.info(f'Viewer {data.get("username")} created by admin')
+        return jsonify({"message": "Viewer created successfully"}), 200
+    except Exception as e:
+        logger.error(f'An error occurred: {e}')
+        return jsonify({"message": "An error occurred"}), 500
+    
+# Update viewer (Admin only)
+@bp.route("/viewer/update", methods=["POST"])
+@login_required
+def update_viewer():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        viewer = viewers_collection.find_one({"username": username})
+
+        if not viewer:
+            logger.error(f'Viewer {data.get("username")} does not exist')
+            return jsonify({"message": "Viewer does not exist"}), 400
+        if "password" in data:
+            data["password_hash"] = generate_password_hash(data["password"])
+            data.pop("password")
+        viewers_collection.update_one({"username": username}, {"$set": viewer})
+        return jsonify({"message": "Viewer updated successfully"})
+    except Exception as e:
+        logger.error(f'An error occurred: {e}')
+        return jsonify({"message": "An error occurred"}), 500
+    
+# Delete viewer (Admin only)
+@bp.route("/viewer/delete", methods=["POST"])
+@login_required
+def delete_viewer():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        query = {"username": username}
+        viewer = viewers_collection.find_one(query)
+
+        if viewer:
+            viewers_collection.delete_one(query)
+            return jsonify({"message": "Viewer deleted successfully"})
+        return jsonify({"message": "Viewer does not exist"})
+    except Exception as e:
+        logger.error(f'An error occurred: {e}')
+        return jsonify({"message": "An error occurred"}), 500
+    
+@bp.route("/viewer/get", methods=["GET"])
+@login_required
+def get_viewers():
+    try:
+        aggregate = viewers_collection.aggregate([{"$project": {"_id": 0}}])
+        users = [user for user in aggregate]
+        return jsonify(users)
+    except Exception as e:
+        logger.error(f'An error occurred: {e}')
+        return jsonify({"message": "An error occurred"}), 500
+    
 # Create user (Admin only)
 @bp.route("/user/create", methods=["POST"])
 @login_required
@@ -56,25 +124,17 @@ def create_user():
             logger.error(f'Invalid user type {data.get("user_type")}')
             return jsonify({"message": "Invalid user type"}), 400
 
-        if data.get('user_type') != "viewer":
-            user = {
-                "username": data.get('username'),
-                "password_hash": generate_password_hash(data.get('password')),
-                "user_type": data.get('user_type'),
-                "first_name": data.get('first_name'),
-                "last_name": data.get('last_name'),
-                "email": data.get('email'),
-                "phone": data.get('phone'),
-                "listing_url": data.get('listing_url')
-            }
-            users_collection.insert_one(user)
-        else:
-            user = {
-                "username": data.get('username'),
-                "password": data.get('password'),
-                "listing_url": data.get('listing_url')
-            }
-            viewers_collection.insert_one(user)
+        user = {
+            "username": data.get('username'),
+            "password_hash": generate_password_hash(data.get('password')),
+            "user_type": data.get('user_type'),
+            "first_name": data.get('first_name'),
+            "last_name": data.get('last_name'),
+            "email": data.get('email'),
+            "phone": data.get('phone'),
+            "listing_url": data.get('listing_url')
+        }
+        users_collection.insert_one(user)
         
         logger.info(f'User {data.get("username")} created by admin')
         return jsonify({"message": "User created successfully"}), 200

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from config import Config
 from routes.auth import bp as auth_bp
@@ -11,7 +11,7 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 from db import MongoConnector
-from user import User
+from user import User, Viewer
 
 import logging
 logger = logging.getLogger('lucky_house')
@@ -20,6 +20,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 mongoConnector = MongoConnector()
 login_manager = LoginManager()
+login_manager.anonymous_user = Viewer
 login_manager.init_app(app)
 
 CORS(app, 

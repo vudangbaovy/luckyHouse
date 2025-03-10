@@ -1,4 +1,4 @@
-from flask_login import UserMixin
+from flask_login import UserMixin, AnonymousUserMixin
 
 class User(UserMixin):
     def __init__(self, username, pw, user_type, first_name=None, last_name=None, email=None, phone=None, listing_url=None):
@@ -9,6 +9,15 @@ class User(UserMixin):
         self.last_name = last_name
         self.email = email
         self.phone = phone
+        self.listing_url = listing_url
+    
+    def get_id(self):
+        return self.username
+    
+class Viewer(AnonymousUserMixin):
+    def __init__(self, username, password, listing_url):
+        self.username = username
+        self.password = password
         self.listing_url = listing_url
     
     def get_id(self):
