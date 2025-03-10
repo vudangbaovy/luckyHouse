@@ -6,38 +6,55 @@ import {
     TableHead, TableRow, Paper, Button, IconButton, Dialog, DialogTitle, 
     DialogContent, DialogActions, TextField, Stack, Box,
     Snackbar, Alert, CircularProgress, AlertColor,
-    ImageList, ImageListItem
+    ImageList, ImageListItem,
 } from '@mui/material';
 import { 
     Edit as EditIcon, 
     Delete as DeleteIcon,
     AddPhotoAlternate as AddPhotoIcon,
-    DeleteForever as DeletePhotoIcon
+    DeleteForever as DeletePhotoIcon,
+    PersonAdd as PersonAddIcon, 
+    Visibility as VisibilityIcon
 } from '@mui/icons-material';
+import UserView from '../user/UserView';
 
 interface Listing {
-    id: string;
+    url: string;
     name: string;
     address: string;
     description: string;
     photos: string[];  // URLs of the photos
+    url_token: string;
 }
 
 interface ListingFormData {
-    id: string;
+    url: string;
     name: string;
     address: string;
     description: string;
     photos: string[];
+    url_token: string;
 }
 
 const initialFormData: ListingFormData = {
-    id: '',
+    url: '',
     name: '',
     address: '',
     description: '',
-    photos: []
+    photos: [],
+    url_token: ''
 };
+
+interface Credentials {
+    username: string;
+    password: string;
+}
+
+
+interface UrlGenerationResponse {
+    url_token: string;
+    full_url: string;
+}
 
 interface ListingFormFieldsProps {
     formData: ListingFormData;
@@ -67,9 +84,9 @@ const ListingFormFields = React.memo(({
         <Stack spacing={3}>
             <TextField
                 required
-                label="Listing ID"
-                value={formData.id}
-                onChange={(e) => onFormChange('id', e.target.value)}
+                label="Custom Listing URL"
+                value={formData.url}
+                onChange={(e) => onFormChange('url', e.target.value)}
                 disabled={isEdit}
             />
             <TextField
@@ -144,11 +161,15 @@ const ListingFormFields = React.memo(({
 const ListingView = () => {
     const navigate = useNavigate();
     const [listings, setListings] = useState<Listing[]>([]);
+    const [credentials, setCredentials] = useState<Credentials[]>([]);
     const [openCreate, setOpenCreate] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
+    const [openCredentials, setOpenCredentialsDialog] = useState(false);
     const [formData, setFormData] = useState<ListingFormData>(initialFormData);
     const [selectedListing, setSelectedListing] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [openUrlDialog, setOpenUrlDialog] = useState(false);
+    const [generatedUrl, setGeneratedUrl] = useState<UrlGenerationResponse | null>(null);
     const [notification, setNotification] = useState<{
         open: boolean;
         message: string;
@@ -200,12 +221,37 @@ const ListingView = () => {
             });
     };
 
+    const fetchCredentials = (listingUrl: string) => {
+        setLoading(true);
+        axios.post('http://localhost:8000/admin/listing/get-credentials/' + listingUrl, {}, {
+            withCredentials: true
+        })
+            .then((response) => 
+            {
+                if (response.status !== 200) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                setCredentials(response.data);
+            }
+        ).catch(error => {
+            console.error('There was an error fetching the listings!', error);
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                handleAuthError();
+            } else {
+                showNotification('Failed to fetch listings', 'error');
+            }
+        })
+        .finally(() => {
+            setLoading(false);
+        });
+    }
+
     useEffect(() => {
         fetchListings();
     }, []);
 
     const handleCreateListing = () => {
-        if (!formData.id || !formData.name || !formData.address) {
+        if (!formData.url || !formData.name || !formData.address) {
             showNotification('Please fill in all required fields', 'error');
             return;
         }
@@ -237,12 +283,12 @@ const ListingView = () => {
         setFormData({
             ...listing
         });
-        setSelectedListing(listing.id);
+        setSelectedListing(listing.url);
         setOpenEdit(true);
     };
 
     const handleUpdateListing = () => {
-        if (!formData.id || !formData.name || !formData.address) {
+        if (!formData.url || !formData.name || !formData.address) {
             showNotification('Please fill in all required fields', 'error');
             return;
         }
@@ -271,10 +317,10 @@ const ListingView = () => {
             });
     };
 
-    const handleDeleteListing = (listingId: string) => {
+    const handleDeleteListing = (listingUrl: string) => {
         if (window.confirm('Are you sure you want to delete this listing?')) {
             setLoading(true);
-            axios.post('http://localhost:8000/admin/listing/delete', { id: listingId }, {
+            axios.post('http://localhost:8000/admin/listing/delete', { url: listingUrl }, {
                 withCredentials: true
             })
                 .then(response => {
@@ -318,6 +364,69 @@ const ListingView = () => {
         }));
     }, []);
 
+    const handleGenerateUrl = (listingUrl: string) => {
+        setSelectedListing(listingUrl);
+        setLoading(true);
+        axios.post('http://localhost:8000/admin/listing/generate-url', { url: listingUrl }, {
+            withCredentials: true
+        })
+            .then(response => {
+                setGeneratedUrl(response.data);
+                setOpenUrlDialog(true);
+                showNotification('URL generated successfully', 'success');
+            })
+            .catch(error => {
+                console.error('Error generating URL:', error);
+                if (error.response?.status === 401 || error.response?.status === 403) {
+                    handleAuthError();
+                } else {
+                    showNotification(error.response?.data?.message || 'Error generating URL', 'error');
+                }
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    };
+
+    const handleCopyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text).then(() => {
+            showNotification('Copied to clipboard', 'success');
+        });
+    };
+
+    const handleViewCredentials = (listingUrl: string) => {
+        fetchCredentials(listingUrl);
+        setOpenCredentialsDialog(true);
+    };
+
+    const handleSubmitCredentials = (event: React.FormEvent<HTMLFormElement>) => {
+        setLoading(true);
+        event.preventDefault();
+        const form = event.currentTarget;
+        const formData = new FormData(form);
+        console.log('Selected listing: ', selectedListing)
+        const jsonData = {
+            username: formData.get('username') as string,
+            password: formData.get('password') as string,
+            user_type: 'viewer',
+            listing_url: selectedListing
+        };
+        axios.post('http://localhost:8000/admin/user/create', jsonData, {
+            withCredentials: true
+        })
+            .then((response) => {
+                if (response.status !== 200) {
+                    console.log(response);
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.data;
+            })
+            .catch((error) => {
+                console.error('There was a problem with the axios operation:', error);
+            });
+        setLoading(false);
+    };
+
     return (
         <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -342,7 +451,7 @@ const ListingView = () => {
                     <TableHead>
                         <TableRow>
                             <TableCell><b>#</b></TableCell>
-                            <TableCell><b>ID</b></TableCell>
+                            <TableCell><b>Custom URL</b></TableCell>
                             <TableCell><b>Name</b></TableCell>
                             <TableCell><b>Address</b></TableCell>
                             <TableCell><b>Photos</b></TableCell>
@@ -351,24 +460,39 @@ const ListingView = () => {
                     </TableHead>
                     <TableBody>
                         {listings.map((listing, index) => (
-                            <TableRow key={listing.id}>
+                            <TableRow key={listing.url}>
                                 <TableCell>{index + 1}</TableCell>
-                                <TableCell>{listing.id}</TableCell>
+                                <TableCell>{listing.url}</TableCell>
                                 <TableCell>{listing.name}</TableCell>
                                 <TableCell>{listing.address}</TableCell>
                                 <TableCell>{listing.photos.length}</TableCell>
                                 <TableCell>
                                     <IconButton 
+                                        title="Edit listing"
                                         color="primary" 
                                         onClick={() => handleEditClick(listing)}
                                     >
                                         <EditIcon />
                                     </IconButton>
                                     <IconButton 
+                                        title="Delete listing"
                                         color="error" 
-                                        onClick={() => handleDeleteListing(listing.id)}
+                                        onClick={() => handleDeleteListing(listing.url)}
                                     >
                                         <DeleteIcon />
+                                    </IconButton>
+                                    <IconButton 
+                                        title="Add user to view listing"
+                                        color="primary" 
+                                        onClick={() => handleGenerateUrl(listing.url)}
+                                    >
+                                        <PersonAddIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        color="primary"
+                                        onClick={() => handleViewCredentials(listing.url)}
+                                    >
+                                        <VisibilityIcon />
                                     </IconButton>
                                 </TableCell>
                             </TableRow>
@@ -409,6 +533,87 @@ const ListingView = () => {
                     >
                         {openCreate ? 'Create' : 'Update'}
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Credentials View Dialog */}
+            <Dialog
+                open={openCredentials}
+                onClose={() => setOpenCredentialsDialog(false)}
+                maxWidth="md" 
+                fullWidth
+            >
+                <DialogTitle>Viewer Accounts for this Listing</DialogTitle>
+                <DialogContent>
+                    <UserView />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenCredentialsDialog(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* URL Generation Dialog */}
+            <Dialog 
+                open={openUrlDialog} 
+                onClose={() => setOpenUrlDialog(false)}
+                maxWidth="md" 
+                fullWidth
+            >
+                <DialogTitle>Generated URL and Credentials</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={3} sx={{ mt: 2 }}>
+                        <Box>
+                            <Typography variant="subtitle1" gutterBottom>
+                                <b>Listing URL</b>
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <TextField
+                                    fullWidth
+                                    value={generatedUrl?.full_url || ''}
+                                    InputProps={{ readOnly: true }}
+                                />
+                                <Button 
+                                    variant="outlined"
+                                    onClick={() => handleCopyToClipboard(generatedUrl?.full_url || '')}
+                                >
+                                    Copy
+                                </Button>
+                            </Box>
+                        </Box>
+                        <Box>
+                            <Typography variant="subtitle1" gutterBottom>
+                                <b>Viewer Credentials</b>
+                            </Typography>
+                            <Stack spacing={2}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <form onSubmit={handleSubmitCredentials}>
+                                    <TextField
+                                        label="Username"
+                                        name="username"
+                                        variant="outlined"
+                                        margin="normal"
+                                        fullWidth
+                                        required
+                                    />
+                                    <TextField
+                                        label="Password"
+                                        name="password"
+                                        variant="outlined"
+                                        margin="normal"
+                                        fullWidth
+                                        required
+                                    />
+                                    <Button type="submit" variant="contained" color="primary" fullWidth>
+                                        Create Viewer Credential
+                                    </Button>
+                                </form>
+                                </Box>
+                            </Stack>
+                        </Box>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenUrlDialog(false)}>Close</Button>
                 </DialogActions>
             </Dialog>
 

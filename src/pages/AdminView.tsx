@@ -15,18 +15,16 @@ function TabPanel(props: TabPanelProps) {
     const { children, value, index, ...other } = props;
 
     return (
-        <Box
+        <div
             role="tabpanel"
+            hidden={value !== index}
             id={`admin-tabpanel-${index}`}
             aria-labelledby={`admin-tab-${index}`}
             {...other}
-            sx={{
-                display: value !== index ? 'none' : 'block',
-                mt: 3
-            }}
+            style={{ marginTop: '24px' }}
         >
-            {children}
-        </Box>
+            {value === index && children}
+        </div>
     );
 }
 

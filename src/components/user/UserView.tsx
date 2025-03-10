@@ -16,7 +16,7 @@ interface User {
     last_name: string | null;
     email: string | null;
     phone: string | null;
-    property_id: string | null;
+    listing_url: string | null;
 }
 
 interface UserFormData {
@@ -27,7 +27,7 @@ interface UserFormData {
     last_name: string;
     email: string;
     phone: string;
-    property_id: string;
+    listing_url: string;
 }
 
 const initialFormData: UserFormData = {
@@ -38,7 +38,7 @@ const initialFormData: UserFormData = {
     last_name: '',
     email: '',
     phone: '',
-    property_id: ''
+    listing_url: ''
 };
 
 interface UserFormFieldsProps {
@@ -103,9 +103,9 @@ const UserFormFields = React.memo(({ formData, onFormChange, isEdit }: UserFormF
                 onChange={(e) => onFormChange('phone', e.target.value)}
             />
             <TextField
-                label="Property ID"
-                value={formData.property_id}
-                onChange={(e) => onFormChange('property_id', e.target.value)}
+                label="Listing ID"
+                value={formData.listing_url}
+                onChange={(e) => onFormChange('listing_url', e.target.value)}
             />
         </Stack>
     );
@@ -273,7 +273,7 @@ const UserView = () => {
             last_name: user.last_name || '',
             email: user.email || '',
             phone: user.phone || '',
-            property_id: user.property_id || ''
+            listing_url: user.listing_url || ''
         });
         setSelectedUser(user.username);
         setOpenEdit(true);
@@ -308,7 +308,7 @@ const UserView = () => {
                             <TableCell><b>Last Name</b></TableCell>
                             <TableCell><b>Email</b></TableCell>
                             <TableCell><b>Phone</b></TableCell>
-                            <TableCell><b>Property ID</b></TableCell>
+                            <TableCell><b>Listing ID</b></TableCell>
                             <TableCell><b>Actions</b></TableCell>
                         </TableRow>
                     </TableHead>
@@ -322,7 +322,7 @@ const UserView = () => {
                                 <TableCell>{user.last_name || '-'}</TableCell>
                                 <TableCell>{user.email || '-'}</TableCell>
                                 <TableCell>{user.phone || '-'}</TableCell>
-                                <TableCell>{user.property_id || '-'}</TableCell>
+                                <TableCell>{user.listing_url || '-'}</TableCell>
                                 <TableCell>
                                     <IconButton 
                                         color="primary" 
