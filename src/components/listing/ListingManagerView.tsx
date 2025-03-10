@@ -18,7 +18,7 @@ import {
     AddLink as AddLinkIcon,
     Link as LinkIcon
 } from '@mui/icons-material';
-import ViewerView from '../user/ViewerView';
+import ViewerView from '../user/ViewerManagerView';
 
 interface Listing {
     url: string;

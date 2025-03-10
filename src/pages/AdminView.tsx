@@ -2,9 +2,9 @@ import React, { useState, memo } from 'react';
 import { 
     Container, Typography, Box, Tabs, Tab
 } from '@mui/material';
-import ListingView from '../components/listing/ListingView';
-import UserView from '../components/user/UserView';
-import ViewerView from '../components/user/ViewerView';
+import ListingView from '../components/listing/ListingManagerView';
+import UserView from '../components/user/UserManagerView';
+import ViewerView from '../components/user/ViewerManagerView';
 
 interface TabPanelProps {
     children?: React.ReactNode;

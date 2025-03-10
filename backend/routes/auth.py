@@ -17,6 +17,19 @@ mongoClient = MongoConnector()
 bp = Blueprint('auth', __name__)
 collection = mongoClient.get_collection('users')
 
+
+@bp.route('/', methods=["GET"])
+def get_type():
+    if not current_user.is_authenticated:
+        logger.info('User not authenticated')
+        return jsonify({"error": "Not authenticated"}), 401
+    
+    jsonData = {
+        "user_type": current_user.user_type or "viewer",
+        "listing_url": current_user.listing_url
+    }
+    return jsonify(jsonData), 200
+
 @bp.route("/register", methods=["POST"])
 def register():
     try:
@@ -67,14 +80,3 @@ def logout():
     logout_user()
     logger.info('User logged out')
     return jsonify({"message": "Logout successful"}), 200
-
-@bp.route('/user', methods=["GET"])
-def get_type():
-    if not current_user.is_authenticated:
-        logger.info('User not authenticated')
-        return jsonify({"info": "Not authenticated"}), 401
-        
-    return jsonify({
-        "user_type": current_user.user_type,
-        "logged_in": True
-    }), 200

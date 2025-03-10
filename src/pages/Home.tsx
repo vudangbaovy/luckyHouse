@@ -12,7 +12,7 @@ const Home: React.FC = () => {
     const [userType, setUserType] = useState<string>('');
 
     const checkLogin = () => {
-        axios.get('http://localhost:8000/auth/user', { withCredentials: true })
+        axios.get('http://localhost:8000/auth', { withCredentials: true })
             .then((response) => {
                 console.log('Logged in as ', response.data['user_type']);
                 setLoginState(true);
