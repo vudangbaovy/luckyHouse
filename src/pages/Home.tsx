@@ -61,17 +61,10 @@ const Home: React.FC = () => {
                                 Log in to view your dashboard
                             </Typography>
                         </Grid2>
-                        <Grid2 container spacing={2}>
-                            <Grid2>
-                                <Button variant="contained" color="primary" component={Link} to="/login">
-                                    Log In
-                                </Button>
-                            </Grid2>
-                            <Grid2>
-                                <Button variant="contained" color="primary" component={Link} to="/signup">
-                                    Sign Up
-                                </Button>
-                            </Grid2>
+                        <Grid2>
+                            <Button variant="contained" color="primary" component={Link} to="/login">
+                                Log In
+                            </Button>
                         </Grid2>
                     </Grid2>
                 </Container>

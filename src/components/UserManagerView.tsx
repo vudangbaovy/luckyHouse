@@ -53,16 +53,19 @@ const UserFormFields = React.memo(({ formData, onFormChange, isEdit }: UserFormF
     const [listingUrls, setListingUrls] = useState<string[]>([]);
 
     useEffect(() => {
-        axios.get('http://localhost:8000/admin/listing/get', {
-            withCredentials: true
-        })
-        .then(response => {
-            setListingUrls(response.data.map((listing: { url: string }) => listing.url));
-        })
-        .catch(error => {
-            console.error('Error fetching listing URLs:', error);
-        });
-    }, []);
+        // Only fetch listing URLs if we're in admin context
+        if (formData.user_type !== 'tenant') {
+            axios.get('http://localhost:8000/admin/listing/get', {
+                withCredentials: true
+            })
+            .then(response => {
+                setListingUrls(response.data.map((listing: { url: string }) => listing.url));
+            })
+            .catch(error => {
+                console.error('Error fetching listing URLs:', error);
+            });
+        }
+    }, [formData.user_type]);
 
     return (
         <Stack spacing={2}>
@@ -91,9 +94,22 @@ const UserFormFields = React.memo(({ formData, onFormChange, isEdit }: UserFormF
                 onChange={(e) => onFormChange('user_type', e.target.value)}
             >
                 <MenuItem value="admin">Admin</MenuItem>
-                <MenuItem value="viewer">Viewer</MenuItem>
                 <MenuItem value="tenant">Tenant</MenuItem>
             </TextField>
+            {formData.user_type !== 'tenant' && (
+                <TextField
+                    select
+                    label="Listing URL"
+                    value={formData.listing_url}
+                    onChange={(e) => onFormChange('listing_url', e.target.value)}
+                >
+                    {listingUrls.map((url) => (
+                        <MenuItem key={url} value={url}>
+                            {url}
+                        </MenuItem>
+                    ))}
+                </TextField>
+            )}
             <TextField
                 label="First Name"
                 value={formData.first_name}
@@ -115,23 +131,15 @@ const UserFormFields = React.memo(({ formData, onFormChange, isEdit }: UserFormF
                 value={formData.phone}
                 onChange={(e) => onFormChange('phone', e.target.value)}
             />
-            <TextField
-                select
-                label="Listing URL"
-                value={formData.listing_url}
-                onChange={(e) => onFormChange('listing_url', e.target.value)}
-            >
-                {listingUrls.map((url) => (
-                    <MenuItem key={url} value={url}>
-                        {url}
-                    </MenuItem>
-                ))}
-            </TextField>
         </Stack>
     );
 });
 
-const UserView = () => {
+interface UserViewProps {
+    listingUrl?: string;
+}
+
+const UserView: React.FC<UserViewProps> = ({ listingUrl }) => {
     const navigate = useNavigate();
     const [users, setUsers] = useState<User[]>([]);
     const [openCreate, setOpenCreate] = useState(false);
@@ -166,33 +174,32 @@ const UserView = () => {
         navigate('/login');
     };
 
-    const fetchUsers = () => {
+    const fetchUsers = useCallback(() => {
         setLoading(true);
         axios.get('http://localhost:8000/admin/user/get', {
             withCredentials: true
         })
-            .then(response => {
-                if (response.status !== 200) {
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                setUsers(response.data);
-            })
-            .catch(error => {
-                console.error('There was an error fetching the users!', error);
-                if (error.response?.status === 401 || error.response?.status === 403) {
-                    handleAuthError();
-                } else {
-                    showNotification('Failed to fetch users', 'error');
-                }
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    };
+        .then(response => {
+            let filteredUsers = response.data;
+            // If listingUrl is provided, filter users to show only those with matching listing_url
+            if (listingUrl) {
+                filteredUsers = response.data.filter((user: User) => user.listing_url === listingUrl);
+            }
+            setUsers(filteredUsers);
+            setLoading(false);
+        })
+        .catch(error => {
+            console.error('Error fetching users:', error);
+            if (error.response?.status === 401) {
+                handleAuthError();
+            }
+            setLoading(false);
+        });
+    }, [listingUrl]);
 
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [fetchUsers]);
 
     const handleFormChange = useCallback((field: keyof UserFormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -301,15 +308,17 @@ const UserView = () => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h3" gutterBottom>
-                    Current Users
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h2">
+                    {listingUrl ? `Tenants for Listing: ${listingUrl}` : 'All Users'}
                 </Typography>
-                <Button 
-                    variant="contained" 
-                    color="primary" 
+                <Button
+                    variant="contained"
                     onClick={() => {
-                        setFormData(initialFormData);
+                        setFormData({
+                            ...initialFormData,
+                            listing_url: listingUrl || ''  // Pre-fill listing URL if provided
+                        });
                         setOpenCreate(true);
                     }}
                 >

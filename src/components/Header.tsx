@@ -1,22 +1,16 @@
 import React, { useState, MouseEvent } from 'react';
 import { AppBar, Box, Toolbar, Typography, IconButton, Menu, Container, MenuItem, Tooltip, Avatar } from '@mui/material';
-import { Person, Person as PersonIcon } from '@mui/icons-material';
+import { Logout as LogoutIcon } from '@mui/icons-material';
 import axios from 'axios';
-import user_icon from '../assets/user_icon.png';
 
-const settings = ['Profile', 'Logout'];
+const settings = ['Logout'];
 
 interface HeaderProps {
     logged_in: Boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({ logged_in }) => {
-    const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-
-    const handleOpenNavMenu = (event: MouseEvent<HTMLElement>) => {
-        setAnchorElNav(event.currentTarget);
-    };
 
     const handleOpenUserMenu = (event: MouseEvent<HTMLElement>) => {
         setAnchorElUser(event.currentTarget);
@@ -26,11 +20,7 @@ const Header: React.FC<HeaderProps> = ({ logged_in }) => {
         setAnchorElUser(null);
     };
 
-    const handleCloseNavMenu = () => {
-        setAnchorElNav(null);
-    };
-
-    const handleLogout = (event: MouseEvent<HTMLElement>): void => {
+    const handleLogout = (): void => {
         axios.post('http://localhost:8000/auth/logout', {}, { withCredentials: true })
             .then((response) => {
                 console.log('Logged out successfully');
@@ -82,36 +72,11 @@ const Header: React.FC<HeaderProps> = ({ logged_in }) => {
                     </Typography>
                     
                     {logged_in && <Box sx={{ flexGrow: 0 }}>
-                        <Tooltip title="Open settings">
-                            <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                <PersonIcon color='inherit' sx={{ color: 'white' }}/>
+                        <Tooltip title="Logout">
+                            <IconButton onClick={handleLogout} sx={{ p: 0 }}>
+                                <LogoutIcon color='inherit' sx={{ color: 'white' }}/>
                             </IconButton>
                         </Tooltip>
-                        <Menu
-                            sx={{ mt: '45px' }}
-                            id="menu-appbar"
-                            anchorEl={anchorElUser}
-                            anchorOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            open={Boolean(anchorElUser)}
-                            onClose={handleCloseUserMenu}
-                        >
-                            {settings.map((setting) => (
-                                <MenuItem
-                                    key={setting}
-                                    onClick={setting === 'Logout' ? handleLogout : handleCloseUserMenu}
-                                >
-                                    <Typography sx={{ textAlign: 'center' }}>{setting}</Typography>
-                                </MenuItem>
-                            ))}
-                        </Menu>
                     </Box>}
                 </Toolbar>
             </Container>

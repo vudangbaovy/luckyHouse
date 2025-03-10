@@ -2,9 +2,8 @@ import React, { useState, memo } from 'react';
 import { 
     Container, Typography, Box, Tabs, Tab
 } from '@mui/material';
-import ListingView from '../components/listing/ListingManagerView';
-import UserView from '../components/user/UserManagerView';
-import ViewerView from '../components/user/ViewerManagerView';
+import ListingView from '../components/ListingManagerView';
+import UserView from '../components/UserManagerView';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -33,7 +32,6 @@ const UserManagementPanel = memo(() => {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <UserView />
-            <ViewerView />
         </Box>
     );
 });

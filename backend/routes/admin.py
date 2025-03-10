@@ -18,7 +18,6 @@ bp = Blueprint('admin', __name__)
 user_types = ['admin', 'viewer', 'tenant']
 
 users_collection = mongoClient.get_collection('users')
-viewers_collection = mongoClient.get_collection('viewers')
 listings_collection = mongoClient.get_collection('listings')
 
 @bp.before_request
@@ -40,80 +39,6 @@ def check_admin():
     logger.info('Admin access granted')
 
 # User Management Routes
-
-# Create viewer (Admin only)
-@bp.route("/viewer/create", methods=["POST"])
-@login_required
-def create_viewer():
-    try:
-        new_viewer = request.get_json()
-        username = new_viewer.get('username')
-        viewer = viewers_collection.find_one({"username": username})
-
-        if viewer:
-            logger.error(f'Viewer {new_viewer.get("username")} already exists')
-            return jsonify({"message": "Viewer already exists"}), 400
-        
-        viewer = {
-            "username": new_viewer.get('username'),
-            "password": new_viewer.get('password'),
-            "listing_url": new_viewer.get('listing_url')
-        }
-        viewers_collection.insert_one(viewer)
-        logger.info(f'Viewer {new_viewer.get("username")} created by admin')
-        return jsonify({"message": "Viewer created successfully"}), 200
-    except Exception as e:
-        logger.error(f'An error occurred: {e}')
-        return jsonify({"message": "An error occurred"}), 500
-    
-# Update viewer (Admin only)
-@bp.route("/viewer/update", methods=["POST"])
-@login_required
-def update_viewer():
-    try:
-        updated_viewer = request.get_json()
-        username = updated_viewer.get('username')
-        viewer = viewers_collection.find_one({"username": username})
-
-        if not viewer:
-            logger.error(f'Viewer {updated_viewer.get("username")} does not exist')
-            return jsonify({"message": "Viewer does not exist"}), 400
-        
-        viewers_collection.update_one({"username": username}, {"$set": updated_viewer})
-        return jsonify({"message": "Viewer updated successfully"}), 200
-    except Exception as e:
-        logger.error(f'An error occurred: {e}')
-        return jsonify({"message": "An error occurred"}), 500
-    
-# Delete viewer (Admin only)
-@bp.route("/viewer/delete", methods=["POST"])
-@login_required
-def delete_viewer():
-    try:
-        data = request.get_json()
-        username = data.get('username')
-        query = {"username": username}
-        viewer = viewers_collection.find_one(query)
-
-        if viewer:
-            viewers_collection.delete_one(query)
-            return jsonify({"message": "Viewer deleted successfully"})
-        return jsonify({"message": "Viewer does not exist"})
-    except Exception as e:
-        logger.error(f'An error occurred: {e}')
-        return jsonify({"message": "An error occurred"}), 500
-    
-@bp.route("/viewer/get", methods=["GET"])
-@login_required
-def get_viewers():
-    try:
-        aggregate = viewers_collection.aggregate([{"$project": {"_id": 0}}])
-        users = [user for user in aggregate]
-        return jsonify(users)
-    except Exception as e:
-        logger.error(f'An error occurred: {e}')
-        return jsonify({"message": "An error occurred"}), 500
-    
 # Create user (Admin only)
 @bp.route("/user/create", methods=["POST"])
 @login_required
@@ -228,8 +153,7 @@ def create_listing():
             "name": data.get('name'),
             "address": data.get('address'),
             "description": data.get('description', ''),
-            "photos": compressed_photos,
-            "open": data.get('open', False)
+            "photos": compressed_photos
         }
 
         listings_collection.insert_one(listing_doc)
@@ -265,8 +189,7 @@ def update_listing():
             "name": data.get('name'),
             "address": data.get('address'),
             "description": data.get('description', ''),
-            "photos": compressed_photos,
-            "open": data.get('open', False)
+            "photos": compressed_photos
         }
 
         listings_collection.update_one(
@@ -319,10 +242,10 @@ def get_credentials(listing_url):
         logger.error(f'Listing with URL {listing_url} not found')
         return jsonify({"message": "Listing not found"}), 404
     
-    results = users_collection.find({"listing_url": listing_url}, {"username": 1, "password": 1, "_id": 0})
+    results = users_collection.find({"listing_url": listing_url}, {"_id": 0, "password_hash": 0})
     if not results:
-        logger.error(f'Viewer for listing with URL {listing_url} not found')
-        return jsonify({"message": "No viewer account found for that listing"}), 404
+        logger.error(f'User for listing with URL {listing_url} not found')
+        return jsonify({"message": "No user account found for that listing"}), 404
     
-    existing_viewers = [viewer for viewer in results]
-    return jsonify(existing_viewers), 200
+    existing_users = [user for user in results]
+    return jsonify(existing_users), 200

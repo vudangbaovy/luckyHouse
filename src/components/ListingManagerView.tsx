@@ -18,7 +18,7 @@ import {
     AddLink as AddLinkIcon,
     Link as LinkIcon
 } from '@mui/icons-material';
-import ViewerView from '../user/ViewerManagerView';
+import UserView from './UserManagerView';
 
 interface Listing {
     url: string;
@@ -26,7 +26,6 @@ interface Listing {
     address: string;
     description: string;
     photos: string[];  // URLs of the photos
-    open: boolean;
 }
 
 interface ListingFormData {
@@ -35,7 +34,6 @@ interface ListingFormData {
     address: string;
     description: string;
     photos: string[];
-    open: boolean;
 }
 
 const initialFormData: ListingFormData = {
@@ -43,21 +41,14 @@ const initialFormData: ListingFormData = {
     name: '',
     address: '',
     description: '',
-    photos: [],
-    open: false
+    photos: []
 };
-
-interface Credentials {
-    username: string;
-    password: string;
-}
 
 interface ListingFormFieldsProps {
     formData: ListingFormData;
     onFormChange: (field: keyof ListingFormData, value: any) => void;
     onAddPhoto: (file: File) => void;
     onRemovePhoto: (index: number) => void;
-    onOpenSwitch: (open: boolean) => void;
     isEdit: boolean;
 }
 
@@ -66,7 +57,6 @@ const ListingFormFields = React.memo(({
     onFormChange, 
     onAddPhoto,
     onRemovePhoto,
-    onOpenSwitch,
     isEdit 
 }: ListingFormFieldsProps) => {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -77,11 +67,6 @@ const ListingFormFields = React.memo(({
             onAddPhoto(file);
         }
     };
-
-    const handleOpenToggle = () => {
-        onOpenSwitch(!formData.open);
-    };
-
     return (
         <Stack spacing={3}>
             <TextField
@@ -156,17 +141,6 @@ const ListingFormFields = React.memo(({
                     ))}
                 </ImageList>
             </Box>
-            
-            {/* Open switch */}
-            <Box>
-                <Typography variant="h6" gutterBottom>
-                    Open Listing
-                </Typography>
-                <Switch
-                    checked={formData.open || false}
-                    onChange={handleOpenToggle}
-                />
-            </Box>
         </Stack>
     );
 });
@@ -174,15 +148,12 @@ const ListingFormFields = React.memo(({
 const ListingView = () => {
     const navigate = useNavigate();
     const [listings, setListings] = useState<Listing[]>([]);
-    const [credentials, setCredentials] = useState<Credentials[]>([]);
     const [openCreate, setOpenCreate] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
     const [openCredentials, setOpenCredentialsDialog] = useState(false);
     const [formData, setFormData] = useState<ListingFormData>(initialFormData);
     const [selectedListing, setSelectedListing] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [openUrlDialog, setOpenUrlDialog] = useState(false);
-    const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
     const [notification, setNotification] = useState<{
         open: boolean;
         message: string;
@@ -234,31 +205,6 @@ const ListingView = () => {
             });
     };
 
-    const fetchCredentials = (listingUrl: string) => {
-        setLoading(true);
-        axios.post('http://localhost:8000/admin/listing/get-credentials/' + listingUrl, {}, {
-            withCredentials: true
-        })
-            .then((response) => 
-            {
-                if (response.status !== 200) {
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                setCredentials(response.data);
-            }
-        ).catch(error => {
-            console.error('There was an error fetching the listings!', error);
-            if (error.response?.status === 401 || error.response?.status === 403) {
-                handleAuthError();
-            } else {
-                showNotification('Failed to fetch listings', 'error');
-            }
-        })
-        .finally(() => {
-            setLoading(false);
-        });
-    }
-
     useEffect(() => {
         fetchListings();
     }, []);
@@ -270,8 +216,7 @@ const ListingView = () => {
         }
 
         const listingData = {
-            ...formData,
-            open: formData.open ?? false
+            ...formData
         };
 
         setLoading(true);
@@ -384,49 +329,15 @@ const ListingView = () => {
 
     const handleUrl = (listingUrl: string) => {
         setSelectedListing(listingUrl);
-        setGeneratedUrl('http://localhost:3000/listing/' + listingUrl); // TODO: Change this to the actual domain
-        setOpenUrlDialog(true);
-    };
-
-    const handleCopyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text).then(() => {
+        const url = 'http://localhost:3000/listing/' + listingUrl; // TODO: Change this to the actual domain
+        navigator.clipboard.writeText(url).then(() => {
             showNotification('Copied to clipboard', 'success');
         });
     };
 
     const handleViewCredentials = (listingUrl: string) => {
-        fetchCredentials(listingUrl);
         setSelectedListing(listingUrl);
         setOpenCredentialsDialog(true);
-    };
-
-    const handleSubmitCredentials = (event: React.FormEvent<HTMLFormElement>) => {
-        setLoading(true);
-        event.preventDefault();
-        const form = event.currentTarget;
-        const formData = new FormData(form);
-        console.log('Selected listing: ', selectedListing)
-        const jsonData = {
-            username: formData.get('username') as string,
-            password: formData.get('password') as string,
-            listing_url: selectedListing
-        };
-
-        axios.post('http://localhost:8000/admin/viewer/create', jsonData, {
-            withCredentials: true
-        })
-            .then((response) => {
-                if (response.status !== 200) {
-                    showNotification('Failed to create viewer credentials', 'error');
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                setOpenUrlDialog(false);
-                return response.data;
-            })
-            .catch((error) => {
-                console.error('There was a problem with the axios operation:', error);
-            });
-        setLoading(false);
     };
 
     return (
@@ -520,7 +431,6 @@ const ListingView = () => {
                             onFormChange={handleFormChange}
                             onAddPhoto={handleAddPhoto}
                             onRemovePhoto={handleRemovePhoto}
-                            onOpenSwitch={(open: boolean) => setFormData(prev => ({ ...prev, open }))}
                             isEdit={openEdit}
                         />
                     </Box>
@@ -548,75 +458,10 @@ const ListingView = () => {
             >
                 <DialogTitle>Viewer Accounts for this Listing</DialogTitle>
                 <DialogContent>
-                    <ViewerView listingUrl={selectedListing || undefined} /> {/* Pass the selected listing URL */}
+                    <UserView listingUrl={selectedListing || undefined} /> {/* Pass the selected listing URL */}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenCredentialsDialog(false)}>Close</Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* URL Generation Dialog */}
-            <Dialog 
-                open={openUrlDialog} 
-                onClose={() => setOpenUrlDialog(false)}
-                maxWidth="md" 
-                fullWidth
-            >
-                <DialogTitle>Generated URL and Credentials</DialogTitle>
-                <DialogContent>
-                    <Stack spacing={3} sx={{ mt: 2 }}>
-                        <Box>
-                            <Typography variant="subtitle1" gutterBottom>
-                                <b>Listing URL</b>
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <TextField
-                                    fullWidth
-                                    value={generatedUrl || ''}
-                                    InputProps={{ readOnly: true }}
-                                />
-                                <Button 
-                                    variant="outlined"
-                                    onClick={() => handleCopyToClipboard(generatedUrl || '')}
-                                >
-                                    Copy
-                                </Button>
-                            </Box>
-                        </Box>
-                        <Box>
-                            <Typography variant="subtitle1" gutterBottom>
-                                <b>Viewer Credentials</b>
-                            </Typography>
-                            <Stack spacing={2}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <form onSubmit={handleSubmitCredentials}>
-                                    <TextField
-                                        label="Username"
-                                        name="username"
-                                        variant="outlined"
-                                        margin="normal"
-                                        fullWidth
-                                        required
-                                    />
-                                    <TextField
-                                        label="Password"
-                                        name="password"
-                                        variant="outlined"
-                                        margin="normal"
-                                        fullWidth
-                                        required
-                                    />
-                                    <Button type="submit" variant="contained" color="primary" fullWidth>
-                                        Create Viewer Credential
-                                    </Button>
-                                </form>
-                                </Box>
-                            </Stack>
-                        </Box>
-                    </Stack>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenUrlDialog(false)}>Close</Button>
                 </DialogActions>
             </Dialog>
 

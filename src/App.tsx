@@ -3,13 +3,12 @@ import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import Signup from './pages/Signup';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { firebaseConfig } from './firebaseconfig';
-import ViewerProtectedRoute from './components/auth/ViewerProtectedRoute';
-import ViewerListingPage from './components/viewer/ViewerListingPage';
+import ListingProtectedRoute from './components/auth/ListingProtectedRoute';
+import ViewerListingPage from './pages/ViewerListingPage';
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
@@ -57,17 +56,15 @@ const App: React.FC = () => {
       <ThemeProvider theme={theme}>
         <Routes>
           {/* Public routes */}
-          <Route path="/login" element={<Login isViewer={false} />} />
-          <Route path="/viewer/login" element={<Login isViewer={true} />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
 
-          {/* Viewer routes - must come before admin routes to take precedence */}
+          {/* Protected listing route */}
           <Route 
             path="/listing/:url_token" 
             element={
-              <ViewerProtectedRoute>
+              <ListingProtectedRoute>
                 <ViewerListingPage />
-              </ViewerProtectedRoute>
+              </ListingProtectedRoute>
             } 
           />
           

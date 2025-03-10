@@ -3,10 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Typography, TextField, Button, Container, Snackbar, Alert, Grid2 } from '@mui/material';
 import axios from 'axios';
 
-interface LoginProps {
-    isViewer: boolean;
-}
-
 interface LoginResponse {
     authenticated: boolean;
     user_type: string;
@@ -14,7 +10,7 @@ interface LoginResponse {
     listing_url?: string;
 }
 
-const Login: React.FC<LoginProps> = ({ isViewer }) => {
+const Login: React.FC = () => {
     const navigate = useNavigate();
     const [openSnackBar, setOpenSnackbar] = useState(false);
     const [snackbarMsg, setSnackbarMessage] = useState("");
@@ -26,14 +22,8 @@ const Login: React.FC<LoginProps> = ({ isViewer }) => {
         const formData = new FormData(form);
         const jsonData = {
             username: formData.get('username') as string,
-            password: formData.get('password') as string,
-            user_type: isViewer ? 'viewer' : 'admin'
+            password: formData.get('password') as string
         };
-
-        console.log('Submitting login with data:', { 
-            ...jsonData, 
-            password: '[REDACTED]' 
-        });
 
         try {
             const response = await axios.post<LoginResponse>('http://localhost:8000/auth/login', jsonData, {
@@ -43,21 +33,23 @@ const Login: React.FC<LoginProps> = ({ isViewer }) => {
                 }
             });
 
-            console.log('Login response:', response.data);
-
             if (response.status === 200 && response.data.authenticated) {
                 setSnackbarSeverity('success');
                 setSnackbarMessage('Login successful');
 
-                if (isViewer) {
+                // Handle different user types
+                if (response.data.user_type === 'tenant') {
                     if (response.data.listing_url) {
+                        localStorage.removeItem('nextUrl'); // Clear any saved redirect
                         navigate(`/listing/${response.data.listing_url}`);
                     } else {
                         setSnackbarSeverity('error');
-                        setSnackbarMessage('No listing URL available for this viewer');
+                        setSnackbarMessage('Tenant account has no assigned listing');
                     }
-                } else {
-                    navigate('/');
+                } else if (response.data.user_type === 'admin') {
+                    const nextUrl = localStorage.getItem('nextUrl');
+                    localStorage.removeItem('nextUrl');
+                    navigate(nextUrl || '/');
                 }
             } else {
                 setSnackbarSeverity('error');
@@ -88,16 +80,9 @@ const Login: React.FC<LoginProps> = ({ isViewer }) => {
             >
                 <Grid2>
                     <Typography variant="h1" component="h1" gutterBottom>
-                        {isViewer ? 'Listing Login' : 'User Login'}
+                        User Login
                     </Typography>
                 </Grid2>
-                {isViewer && (
-                    <Grid2>
-                        <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 2 }}>
-                            Please use the link provided by the property manager to access your listing.
-                        </Typography>
-                    </Grid2>
-                )}
                 <Grid2>
                     <form onSubmit={handleSubmit}>
                         <TextField
@@ -129,26 +114,6 @@ const Login: React.FC<LoginProps> = ({ isViewer }) => {
                         </Button>
                     </form>
                 </Grid2>
-                {!isViewer && (
-                    <Grid2>
-                        <Button
-                            component={Link}
-                            to="/viewer/login"
-                            color="primary"
-                            sx={{
-                                color: 'grey',
-                                textTransform: 'none',
-                                mt: 2,
-                                textDecoration: 'underline',
-                                '&:hover': {
-                                    backgroundColor: 'transparent',
-                                },
-                            }}
-                        >
-                            Looking to view a listing? Log in here.
-                        </Button>
-                    </Grid2>
-                )}
             </Grid2>
             <Snackbar
                 open={openSnackBar}
@@ -165,6 +130,6 @@ const Login: React.FC<LoginProps> = ({ isViewer }) => {
             </Snackbar>
         </Container>
     );
-}
+};
 
 export default Login;

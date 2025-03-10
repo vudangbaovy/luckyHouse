@@ -4,7 +4,7 @@ import axios from 'axios';
 import { CircularProgress, Box, Container, Typography, Paper, Button } from '@mui/material';
 import { Home as HomeIcon } from '@mui/icons-material';
 
-interface ViewerProtectedRouteProps {
+interface ListingProtectedRouteProps {
     children: React.ReactNode;
 }
 
@@ -14,10 +14,9 @@ interface AuthCheckResponse {
     listing_url?: string;
 }
 
-const ViewerProtectedRoute: React.FC<ViewerProtectedRouteProps> = ({ children }) => {
+const ListingProtectedRoute: React.FC<ListingProtectedRouteProps> = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isListingOpen, setIsListingOpen] = useState<boolean | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const location = useLocation();
     const { url_token } = useParams<{ url_token: string }>();
@@ -36,21 +35,14 @@ const ViewerProtectedRoute: React.FC<ViewerProtectedRouteProps> = ({ children })
                 
                 setIsAdmin(isUserAdmin);
 
-                // Check listing status
-                const listingResponse = await axios.get(`http://localhost:8000/listing/${url_token}/check-status`);
-                setIsListingOpen(listingResponse.data.open);
-
                 if (authResponse.status === 200 && authResponse.data.authenticated) {
-                    // Admins can access any listing regardless of status
+                    // Admins can access any listing
                     if (isUserAdmin) {
                         setIsAuthenticated(true);
                     }
-                    // For viewers, check both listing status and URL match
-                    else if (authResponse.data.user_type === 'viewer') {
-                        setIsAuthenticated(
-                            listingResponse.data.open && 
-                            authResponse.data.listing_url === url_token
-                        );
+                    // For tenants, check if they have access to this specific listing
+                    else if (authResponse.data.user_type === 'tenant') {
+                        setIsAuthenticated(authResponse.data.listing_url === url_token);
                     }
                 } else {
                     setIsAuthenticated(false);
@@ -79,36 +71,13 @@ const ViewerProtectedRoute: React.FC<ViewerProtectedRouteProps> = ({ children })
         );
     }
 
-    // Show "not available" message only for non-admin users
-    if (!isAdmin && isListingOpen === false) {
-        return (
-            <Container maxWidth="sm" sx={{ py: 4 }}>
-                <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography variant="h4" component="h1" gutterBottom>
-                        Listing Not Available
-                    </Typography>
-                    <Typography variant="body1" sx={{ mb: 4 }}>
-                        This listing is not open for viewing at this time.
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<HomeIcon />}
-                        onClick={() => window.location.href = '/'}
-                    >
-                        Go to Home
-                    </Button>
-                </Paper>
-            </Container>
-        );
-    }
-
     // Handle authentication redirect
     if (!isAuthenticated) {
         localStorage.setItem('nextUrl', location.pathname);
-        return <Navigate to="/viewer/login" replace />;
+        return <Navigate to="/login" replace />;
     }
 
     return <>{children}</>;
 };
 
-export default ViewerProtectedRoute; 
+export default ListingProtectedRoute; 

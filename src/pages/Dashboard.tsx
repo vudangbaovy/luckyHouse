@@ -2,7 +2,6 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import AdminView from './AdminView';
 import TenantView from './TenantView';
-import ListingViewer from '../components/viewer/ListingViewer';
 
 interface DashboardProps {
     userType: string;
@@ -17,8 +16,6 @@ const Dashboard: React.FC<DashboardProps> = ({userType}) => {
             return <AdminView />;
             case 'tenant':
             return <TenantView />;
-            case 'viewer':
-            return <ListingViewer />;
             }
             })()}
         </div>
