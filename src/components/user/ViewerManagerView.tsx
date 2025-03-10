@@ -55,7 +55,6 @@ const ViewerFormFields = React.memo(({ formData, onFormChange, isEdit }: ViewerF
                 label="Username"
                 value={formData.username}
                 onChange={(e) => onFormChange('username', e.target.value)}
-                disabled
             />
             <TextField
                 required
