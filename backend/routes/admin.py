@@ -64,18 +64,16 @@ def create_viewer():
 @login_required
 def update_viewer():
     try:
-        data = request.get_json()
-        username = data.get('username')
+        updated_viewer = request.get_json()
+        username = updated_viewer.get('username')
         viewer = viewers_collection.find_one({"username": username})
 
         if not viewer:
-            logger.error(f'Viewer {data.get("username")} does not exist')
+            logger.error(f'Viewer {updated_viewer.get("username")} does not exist')
             return jsonify({"message": "Viewer does not exist"}), 400
-        if "password" in data:
-            data["password_hash"] = generate_password_hash(data["password"])
-            data.pop("password")
-        viewers_collection.update_one({"username": username}, {"$set": viewer})
-        return jsonify({"message": "Viewer updated successfully"})
+        
+        viewers_collection.update_one({"username": username}, {"$set": updated_viewer})
+        return jsonify({"message": "Viewer updated successfully"}), 200
     except Exception as e:
         logger.error(f'An error occurred: {e}')
         return jsonify({"message": "An error occurred"}), 500

@@ -171,7 +171,7 @@ const ViewerView = () => {
         })
             .then(response => {
                 setOpenEdit(false);
-                setFormData(initialFormData);
+                setFormData(formData);
                 setSelectedViewer(null);
                 fetchViewers();
                 showNotification('Viewer updated successfully', 'success');
