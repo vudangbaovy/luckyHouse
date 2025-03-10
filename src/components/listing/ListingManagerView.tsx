@@ -269,8 +269,13 @@ const ListingView = () => {
             return;
         }
 
+        const listingData = {
+            ...formData,
+            open: formData.open ?? false
+        };
+
         setLoading(true);
-        axios.post('http://localhost:8000/admin/listing/create', formData, {
+        axios.post('http://localhost:8000/admin/listing/create', listingData, {
             withCredentials: true
         })
             .then(response => {
@@ -379,7 +384,7 @@ const ListingView = () => {
 
     const handleUrl = (listingUrl: string) => {
         setSelectedListing(listingUrl);
-        setGeneratedUrl('http://localhost:8000/listing/' + listingUrl); // TODO: Change this to the actual domain
+        setGeneratedUrl('http://localhost:3000/listing/' + listingUrl); // TODO: Change this to the actual domain
         setOpenUrlDialog(true);
     };
 

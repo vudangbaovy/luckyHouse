@@ -3,10 +3,13 @@ import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { firebaseConfig } from './firebaseconfig';
+import ViewerProtectedRoute from './components/auth/ViewerProtectedRoute';
+import ViewerListingPage from './components/viewer/ViewerListingPage';
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
@@ -53,9 +56,26 @@ const App: React.FC = () => {
     <div>
       <ThemeProvider theme={theme}>
         <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<Login isViewer={false} />} />
+          <Route path="/viewer/login" element={<Login isViewer={true} />} />
+          <Route path="/signup" element={<Signup />} />
+
+          {/* Viewer routes - must come before admin routes to take precedence */}
+          <Route 
+            path="/listing/:url_token" 
+            element={
+              <ViewerProtectedRoute>
+                <ViewerListingPage />
+              </ViewerProtectedRoute>
+            } 
+          />
+          
+          {/* Root route */}
           <Route path="/" element={<Home />} />
+
+          {/* 404 route */}
           <Route path="*" element={<NoMatch />} />
-          <Route path="/login" element={<Login />} />
         </Routes>
       </ThemeProvider>
     </div>
