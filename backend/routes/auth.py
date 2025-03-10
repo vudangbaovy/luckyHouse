@@ -71,8 +71,8 @@ def logout():
 @bp.route('/user', methods=["GET"])
 def get_type():
     if not current_user.is_authenticated:
-        logger.error('User not authenticated')
-        return jsonify({"error": "Not authenticated"}), 401
+        logger.info('User not authenticated')
+        return jsonify({"info": "Not authenticated"}), 401
         
     return jsonify({
         "user_type": current_user.user_type,

@@ -15,7 +15,7 @@ class User(UserMixin):
         return self.username
     
 class Viewer(AnonymousUserMixin):
-    def __init__(self, username, password, listing_url):
+    def __init__(self, username=None, password=None, listing_url=None):
         self.username = username
         self.password = password
         self.listing_url = listing_url
