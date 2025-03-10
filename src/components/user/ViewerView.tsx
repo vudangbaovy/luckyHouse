@@ -33,8 +33,20 @@ interface ViewerFormFieldsProps {
     isEdit: boolean;
 }
 
-const UserFormFields = React.memo(({ formData, onFormChange, isEdit }: ViewerFormFieldsProps) => {
-    // Password is required for new users and when editing viewer users
+const ViewerFormFields = React.memo(({ formData, onFormChange, isEdit }: ViewerFormFieldsProps) => {
+    const [listingUrls, setListingUrls] = useState<string[]>([]);
+
+    useEffect(() => {
+        axios.get('http://localhost:8000/admin/listing/get', {
+            withCredentials: true
+        })
+        .then(response => {
+            setListingUrls(response.data.map((listing: { url: string }) => listing.url));
+        })
+        .catch(error => {
+            console.error('Error fetching listing URLs:', error);
+        });
+    }, []);
 
     return (
         <Stack spacing={2}>
@@ -53,10 +65,17 @@ const UserFormFields = React.memo(({ formData, onFormChange, isEdit }: ViewerFor
                 helperText={isEdit ? "Leave empty to keep current password" : ""}
             />
             <TextField
+                select
                 label="Listing URL"
                 value={formData.listing_url}
                 onChange={(e) => onFormChange('listing_url', e.target.value)}
-            />
+            >
+                {listingUrls.map((url) => (
+                    <MenuItem key={url} value={url}>
+                        {url}
+                    </MenuItem>
+                ))}
+            </TextField>
         </Stack>
     );
 });
@@ -279,7 +298,7 @@ const ViewerView = () => {
                 <DialogTitle>Create New Viewer for a Listing</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 2 }}>
-                        <UserFormFields 
+                        <ViewerFormFields 
                             formData={formData}
                             onFormChange={handleFormChange}
                             isEdit={false}
@@ -298,7 +317,7 @@ const ViewerView = () => {
                 <DialogTitle>Edit Viewer</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 2 }}>
-                        <UserFormFields 
+                        <ViewerFormFields 
                             formData={formData}
                             onFormChange={handleFormChange}
                             isEdit={true}
@@ -350,4 +369,4 @@ const ViewerView = () => {
     );
 };
 
-export default ViewerView; 
+export default ViewerView;

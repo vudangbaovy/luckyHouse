@@ -50,6 +50,19 @@ interface UserFormFieldsProps {
 const UserFormFields = React.memo(({ formData, onFormChange, isEdit }: UserFormFieldsProps) => {
     // Password is required for new users and when editing viewer users
     const isPasswordRequired = !isEdit || (isEdit && formData.user_type === 'viewer');
+    const [listingUrls, setListingUrls] = useState<string[]>([]);
+
+    useEffect(() => {
+        axios.get('http://localhost:8000/admin/listing/get', {
+            withCredentials: true
+        })
+        .then(response => {
+            setListingUrls(response.data.map((listing: { url: string }) => listing.url));
+        })
+        .catch(error => {
+            console.error('Error fetching listing URLs:', error);
+        });
+    }, []);
 
     return (
         <Stack spacing={2}>
@@ -103,10 +116,17 @@ const UserFormFields = React.memo(({ formData, onFormChange, isEdit }: UserFormF
                 onChange={(e) => onFormChange('phone', e.target.value)}
             />
             <TextField
-                label="Listing ID"
+                select
+                label="Listing URL"
                 value={formData.listing_url}
                 onChange={(e) => onFormChange('listing_url', e.target.value)}
-            />
+            >
+                {listingUrls.map((url) => (
+                    <MenuItem key={url} value={url}>
+                        {url}
+                    </MenuItem>
+                ))}
+            </TextField>
         </Stack>
     );
 });
@@ -308,7 +328,7 @@ const UserView = () => {
                             <TableCell><b>Last Name</b></TableCell>
                             <TableCell><b>Email</b></TableCell>
                             <TableCell><b>Phone</b></TableCell>
-                            <TableCell><b>Listing ID</b></TableCell>
+                            <TableCell><b>Listing URL</b></TableCell>
                             <TableCell><b>Actions</b></TableCell>
                         </TableRow>
                     </TableHead>
