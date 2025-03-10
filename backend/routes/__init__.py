@@ -1,10 +1,11 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from config import Config
 from routes.auth import bp as auth_bp
 from routes.admin import bp as admin_bp
 from routes.listing import bp as listing_bp
 from flask_login import LoginManager
+import os
 
 import os, sys
 current = os.path.dirname(os.path.realpath(__file__))
@@ -16,16 +17,20 @@ from user import User, Viewer
 import logging
 logger = logging.getLogger('lucky_house')
 
-app = Flask(__name__)
+app = Flask(__name__, 
+    static_folder='../../build',  # Changed to point to build root
+    static_url_path='')
+
 app.config.from_object(Config)
 mongoConnector = MongoConnector()
 login_manager = LoginManager()
 login_manager.anonymous_user = Viewer
 login_manager.init_app(app)
 
+# Update CORS to only allow your frontend domain
 CORS(app, 
      resources={r"/*": {
-         "origins": "*",
+         "origins": "http://localhost:3000",  # Update this for production
          "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
          "allow_headers": ["Content-Type", "Authorization"],
          "expose_headers": ["Content-Type"],
@@ -48,9 +53,18 @@ def load_user(username):
     try:
         user = collection.find_one({'username': username})
         if not user:
-            logger.error(f'No user found with username {username}')
+            # Check viewers collection
+            viewers_collection = mongoConnector.get_collection('viewers')
+            viewer = viewers_collection.find_one({'username': username})
+            if viewer:
+                return User(
+                    username=viewer['username'],
+                    pw='',
+                    user_type='viewer',
+                    listing_url=viewer.get('listing_url')
+                )
             return None
-        logger.info(f'Loaded user with username {username} and type {user["user_type"]}')
+
         return User(
             username=user['username'],
             pw=user['password_hash'],
@@ -62,7 +76,7 @@ def load_user(username):
             listing_url=user.get('listing_url')
         )
     except Exception as e:
-        logger.error(f'An error occurred in load_user: {e}')
+        logger.error(f'Error in load_user: {e}')
         return None
 
 @login_manager.unauthorized_handler
@@ -70,7 +84,16 @@ def unauthorized():
     logger.error('Unauthorized access')
     return jsonify({"error": "Unauthorized"}), 401
 
-# Register Blueprints
-app.register_blueprint(auth_bp, url_prefix="/auth")
-app.register_blueprint(admin_bp, url_prefix="/admin")
-app.register_blueprint(listing_bp, url_prefix="/listing")
+# Register blueprints
+app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(admin_bp, url_prefix='/admin')
+app.register_blueprint(listing_bp, url_prefix='/listing')
+
+# Serve React App
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')

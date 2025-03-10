@@ -205,7 +205,7 @@ def get_users():
 def create_listing():
     try:
         data = request.get_json()
-        required_fields = ['url', 'name', 'address', 'open']
+        required_fields = ['url', 'name', 'address']
         
         # Validate required fields
         for field in required_fields:

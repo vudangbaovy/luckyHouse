@@ -52,11 +52,68 @@ def get_listing_details(url_token):
             
         # For viewers, check if they have access to this specific listing
         if current_user.user_type == 'viewer':
-            if not hasattr(current_user, 'listing_url') or current_user.listing_url != listing['id']:
-                logger.error(f'Viewer {current_user.username} does not have access to listing {listing["id"]}')
+            if not hasattr(current_user, 'listing_url') or current_user.listing_url != url_token:
+                logger.error(f'Viewer {current_user.username} does not have access to listing {url_token}')
                 return jsonify({"message": "Unauthorized"}), 403
                 
         return jsonify(listing)
     except Exception as e:
-        logger.error(f'An error occurred: {e}')
-        return jsonify({"message": "An error occurred"}), 500 
+        logger.error(f'Error fetching listing details: {e}')
+        return jsonify({"message": "Error fetching listing details"}), 500
+
+@bp.route('/<url_token>/photos', methods=['GET'])
+@login_required
+def get_listing_photos(url_token):
+    """Get photos for a specific listing"""
+    try:
+        # Check if the user has access to this listing
+        if current_user.user_type not in ['admin', 'viewer']:
+            logger.error(f'User {current_user.username} does not have permission to view listings')
+            return jsonify({"message": "Unauthorized"}), 403
+
+        # For viewers, check if they have access to this specific listing
+        if current_user.user_type == 'viewer':
+            if not hasattr(current_user, 'listing_url') or current_user.listing_url != url_token:
+                logger.error(f'Viewer {current_user.username} does not have access to listing {url_token}')
+                return jsonify({"message": "Unauthorized"}), 403
+
+        listing = listings_collection.find_one(
+            {"url": url_token}, 
+            {"_id": 0, "photos": 1}
+        )
+        if not listing:
+            logger.error(f'Listing with token {url_token} not found')
+            return jsonify({"message": "Listing not found"}), 404
+
+        return jsonify({
+            "photos": listing.get('photos', [])
+        }), 200
+
+    except Exception as e:
+        logger.error(f'Error fetching photos for listing {url_token}: {e}')
+        return jsonify({"message": "Error fetching listing photos"}), 500
+
+@bp.route("/<url_token>/check-status", methods=["GET"])
+def check_listing_status(url_token):
+    """Check if a listing is open for viewing."""
+    try:
+        listing = listings_collection.find_one({"url": url_token})
+        if not listing:
+            logger.error(f'Listing with token {url_token} not found')
+            return jsonify({
+                "open": False,
+                "message": "Listing not found"
+            }), 404
+            
+        # Default to False if 'open' field doesn't exist
+        is_open = listing.get('open', False)
+        return jsonify({
+            "open": is_open,
+            "message": "Listing is closed" if not is_open else None
+        }), 200
+    except Exception as e:
+        logger.error(f'Error checking listing status: {e}')
+        return jsonify({
+            "open": False,
+            "message": "Error checking listing status"
+        }), 500 
