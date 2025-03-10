@@ -3,6 +3,7 @@ from flask_cors import CORS
 from config import Config
 from routes.auth import bp as auth_bp
 from routes.admin import bp as admin_bp
+from routes.listing import bp as listing_bp
 from flask_login import LoginManager
 
 import os, sys
@@ -57,7 +58,7 @@ def load_user(username):
             last_name=user.get('last_name'),
             email=user.get('email'),
             phone=user.get('phone'),
-            property_id=user.get('property_id')
+            listing_url=user.get('listing_url')
         )
     except Exception as e:
         logger.error(f'An error occurred in load_user: {e}')
@@ -71,3 +72,4 @@ def unauthorized():
 # Register Blueprints
 app.register_blueprint(auth_bp, url_prefix="/auth")
 app.register_blueprint(admin_bp, url_prefix="/admin")
+app.register_blueprint(listing_bp, url_prefix="/listing")

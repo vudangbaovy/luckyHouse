@@ -6,3 +6,4 @@ Flask-CORS==4.0.0
 pymongo==4.6.1
 python-dotenv==1.0.1
 Werkzeug==3.0.1
+Pillow==11.1.0
