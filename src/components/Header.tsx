@@ -1,5 +1,6 @@
 import React, { useState, MouseEvent } from 'react';
 import { AppBar, Box, Toolbar, Typography, IconButton, Menu, Container, MenuItem, Tooltip, Avatar } from '@mui/material';
+import { Person, Person as PersonIcon } from '@mui/icons-material';
 import axios from 'axios';
 import user_icon from '../assets/user_icon.png';
 
@@ -83,7 +84,7 @@ const Header: React.FC<HeaderProps> = ({ logged_in }) => {
                     {logged_in && <Box sx={{ flexGrow: 0 }}>
                         <Tooltip title="Open settings">
                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                <Avatar alt="Remy Sharp" src={user_icon} />
+                                <PersonIcon color='inherit' sx={{ color: 'white' }}/>
                             </IconButton>
                         </Tooltip>
                         <Menu

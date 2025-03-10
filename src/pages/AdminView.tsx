@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { 
     Container, Typography, Box, Tabs, Tab
 } from '@mui/material';
 import ListingView from '../components/listing/ListingView';
 import UserView from '../components/user/UserView';
+import ViewerView from '../components/user/ViewerView';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -28,6 +29,19 @@ function TabPanel(props: TabPanelProps) {
     );
 }
 
+const UserManagementPanel = memo(() => {
+    return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <UserView />
+            <ViewerView />
+        </Box>
+    );
+});
+
+const ListingManagementPanel = memo(() => {
+    return <ListingView />;
+});
+
 const AdminView = () => {
     const [tabValue, setTabValue] = useState(0);
 
@@ -49,11 +63,11 @@ const AdminView = () => {
             </Box>
 
             <TabPanel value={tabValue} index={0}>
-                <UserView />
+                <UserManagementPanel />
             </TabPanel>
 
             <TabPanel value={tabValue} index={1}>
-                <ListingView />
+                <ListingManagementPanel />
             </TabPanel>
         </Container>
     );

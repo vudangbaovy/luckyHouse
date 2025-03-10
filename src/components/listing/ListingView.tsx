@@ -408,10 +408,9 @@ const ListingView = () => {
         const jsonData = {
             username: formData.get('username') as string,
             password: formData.get('password') as string,
-            user_type: 'viewer',
             listing_url: selectedListing
         };
-        axios.post('http://localhost:8000/admin/user/create', jsonData, {
+        axios.post('http://localhost:8000/admin/viewer/create', jsonData, {
             withCredentials: true
         })
             .then((response) => {
