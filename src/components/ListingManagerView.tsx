@@ -456,7 +456,7 @@ const ListingView = () => {
                 maxWidth="md" 
                 fullWidth
             >
-                <DialogTitle>Viewer Accounts for this Listing</DialogTitle>
+                <DialogTitle>Tenant Accounts for this Listing</DialogTitle>
                 <DialogContent>
                     <UserView listingUrl={selectedListing || undefined} /> {/* Pass the selected listing URL */}
                 </DialogContent>

@@ -13,10 +13,6 @@ class User(UserMixin):
     
     def get_id(self):
         return self.username
-    
-    @property
-    def is_viewer(self):
-        return self.user_type == "viewer"
 
     @property
     def is_admin(self):
@@ -24,28 +20,6 @@ class User(UserMixin):
 
     def can_view_listing(self, listing_url):
         """Check if user has permission to view a specific listing"""
-        if self.is_admin:
+        if self.is_admin or self.listing_url == listing_url:
             return True
-        if self.is_viewer and self.listing_url == listing_url:
-            return True
-        return False
-
-class Viewer(AnonymousUserMixin):
-    def __init__(self):
-        self.username = None
-        self.user_type = None
-        self.listing_url = None
-    
-    def get_id(self):
-        return None
-    
-    @property
-    def is_viewer(self):
-        return False
-
-    @property
-    def is_admin(self):
-        return False
-
-    def can_view_listing(self, listing_url):
         return False

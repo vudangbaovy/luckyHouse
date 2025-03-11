@@ -12,7 +12,7 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 from db import MongoConnector
-from user import User, Viewer
+from user import User
 
 import logging
 logger = logging.getLogger('lucky_house')
@@ -24,7 +24,6 @@ app = Flask(__name__,
 app.config.from_object(Config)
 mongoConnector = MongoConnector()
 login_manager = LoginManager()
-login_manager.anonymous_user = Viewer
 login_manager.init_app(app)
 
 # Update CORS to only allow your frontend domain
@@ -53,16 +52,6 @@ def load_user(username):
     try:
         user = collection.find_one({'username': username})
         if not user:
-            # Check viewers collection
-            viewers_collection = mongoConnector.get_collection('viewers')
-            viewer = viewers_collection.find_one({'username': username})
-            if viewer:
-                return User(
-                    username=viewer['username'],
-                    pw='',
-                    user_type='viewer',
-                    listing_url=viewer.get('listing_url')
-                )
             return None
 
         return User(

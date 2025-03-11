@@ -6,21 +6,6 @@ from PIL import Image
 import logging
 logger = logging.getLogger('lucky_house')
 
-def generate_secure_token(length=32):
-    """Generate a secure random token for URLs."""
-    return secrets.token_urlsafe(length)
-
-def generate_viewer_credentials(listing_url):
-    """Generate a username and password for a viewer."""
-    # Generate a readable but random username based on listing ID
-    random_suffix = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(4))
-    username = f"viewer_{listing_url}_{random_suffix}"
-    
-    # Generate a secure random password
-    password = ''.join(secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(12))
-    
-    return username, password 
-
 def compress_image(base64_string, max_size_kb=500):
     try:
         # Remove the data URL prefix if present

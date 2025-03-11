@@ -7,7 +7,7 @@ import {
     DialogContent, DialogActions, TextField, MenuItem, Stack, Box,
     Snackbar, Alert, CircularProgress, AlertColor
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, VisibilityOff, Visibility } from '@mui/icons-material';
 
 interface User {
     username: string;
@@ -33,7 +33,7 @@ interface UserFormData {
 const initialFormData: UserFormData = {
     username: '',
     password: '',
-    user_type: 'viewer',
+    user_type: 'tenant',
     first_name: '',
     last_name: '',
     email: '',
@@ -48,10 +48,11 @@ interface UserFormFieldsProps {
 }
 
 const UserFormFields = React.memo(({ formData, onFormChange, isEdit }: UserFormFieldsProps) => {
-    // Password is required for new users and when editing viewer users
-    const isPasswordRequired = !isEdit || (isEdit && formData.user_type === 'viewer');
+    // Password is required for new users and when editing tenant users
+    const isPasswordRequired = !isEdit || (isEdit && formData.user_type === 'tenant');
     const [listingUrls, setListingUrls] = useState<string[]>([]);
-
+    const [showPassword, setShowPassword] = useState(false);
+    
     useEffect(() => {
         // Only fetch listing URLs if we're in admin context
         if (formData.user_type !== 'tenant') {
@@ -79,11 +80,22 @@ const UserFormFields = React.memo(({ formData, onFormChange, isEdit }: UserFormF
             {(isPasswordRequired || !isEdit) && (
                 <TextField
                     required={isPasswordRequired}
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     label={isPasswordRequired ? "Password" : "Password (Optional)"}
                     value={formData.password}
                     onChange={(e) => onFormChange('password', e.target.value)}
                     helperText={isEdit ? "Leave empty to keep current password" : ""}
+                    InputProps={{
+                        endAdornment: (
+                            <IconButton
+                                aria-label="toggle password visibility"
+                                onClick={() => setShowPassword(!showPassword)}
+                                edge="end"
+                            >
+                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                        ),
+                    }}
                 />
             )}
             <TextField
@@ -233,12 +245,6 @@ const UserView: React.FC<UserViewProps> = ({ listingUrl }) => {
     const handleUpdateUser = () => {
         if (!formData.username || !formData.user_type) {
             showNotification('Please fill in all required fields', 'error');
-            return;
-        }
-
-        // Check if password is required for this update
-        if (formData.user_type === 'viewer' && !formData.password) {
-            showNotification('Password is required for viewer users', 'error');
             return;
         }
 

@@ -15,7 +15,7 @@ logger = logging.getLogger('lucky_house')
 mongoClient = MongoConnector()
 bp = Blueprint('admin', __name__)
 
-user_types = ['admin', 'viewer', 'tenant']
+user_types = ['admin', 'tenant']
 
 users_collection = mongoClient.get_collection('users')
 listings_collection = mongoClient.get_collection('listings')
